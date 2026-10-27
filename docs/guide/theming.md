@@ -19,6 +19,8 @@
 
 框架不引入第二套基础控件库。业务应用也应遵循这一约束。
 
+`submodules/nusys-ui` 用于源码审阅与上游修改；运行依赖固定为与之对应的 npm 版本（当前 `4.2.1`）。这样既保留 submodule 的唯一来源约束，又避免要求每个宿主在安装时编译 Lit 组件库。
+
 ## Codicon
 
 nusys-ui 的 Shadow DOM 需要宿主页面提供固定 id 的 Codicon 样式表。`@desktop-framework/ui` 通过 Vite `?url` 导入 CSS 并自动插入：
