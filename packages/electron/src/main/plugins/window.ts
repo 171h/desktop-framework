@@ -71,6 +71,9 @@ export async function apply(ctx: Context): Promise<void> {
     window.webContents.setVisualZoomLevelLimits(1, 1)
 
     const sendState = (): void => {
+      if (window.isDestroyed()) {
+        return
+      }
       host.broadcastWindowState({
         maximized: window.isMaximized(),
         fullscreen: window.isFullScreen(),
@@ -78,6 +81,9 @@ export async function apply(ctx: Context): Promise<void> {
       })
     }
     const persist = debounce(() => {
+      if (window.isDestroyed()) {
+        return
+      }
       void saveWindowState(statePath, window).catch(error => ctx.logger.warn(`[electron] 保存窗口状态失败：${errorMessage(error)}`))
     }, 250)
 
@@ -164,11 +170,16 @@ export async function apply(ctx: Context): Promise<void> {
     }
   }
 
-  await createWindow()
+  try {
+    await createWindow()
+  }
+  catch (error) {
+    ctx.logger.error(`[electron] 主窗口创建失败：${errorMessage(error)}`)
+  }
 
   const onActivate = (): void => {
     if (!host.mainWindow) {
-      void createWindow()
+      void createWindow().catch(error => ctx.logger.error(`[electron] 重新创建窗口失败：${errorMessage(error)}`))
     }
     else {
       host.mainWindow.focus()

@@ -91,7 +91,10 @@ export class ElectronHostService extends Service {
 
   /** 发送窗口状态。 */
   broadcastWindowState(state: WindowState): void {
-    this.mainWindow?.webContents.send('df:window-state', state)
+    if (!this.mainWindow || this.mainWindow.isDestroyed() || this.mainWindow.webContents.isDestroyed()) {
+      return
+    }
+    this.mainWindow.webContents.send('df:window-state', state)
   }
 
   /** 发送原生菜单命令。 */

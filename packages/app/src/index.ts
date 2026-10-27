@@ -73,6 +73,10 @@ export async function createFrameworkApp(options: CreateFrameworkAppOptions): Pr
   await ctx.kernel.load(entries)
   startup.mark('plugins-ready')
 
+  if (!ctx.shell) {
+    throw new Error('应用外壳插件加载失败；请检查内核插件诊断信息')
+  }
+
   return {
     ctx,
     shell: ctx.shell,
