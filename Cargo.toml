@@ -1,0 +1,56 @@
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+license = "MIT"
+repository = "https://github.com/171h/desktop-framework"
+homepage = "https://github.com/171h/desktop-framework"
+description = "桌面应用框架的 Rust / WebAssembly 核心"
+
+[workspace.dependencies]
+df_ast = { path = "crates/df_ast", version = "0.1.0" }
+df_geometry = { path = "crates/df_geometry", version = "0.1.0" }
+df_importer = { path = "crates/df_importer", version = "0.1.0" }
+df_plugin_obj = { path = "crates/df_plugin_obj", version = "0.1.0" }
+df_plugin_stl = { path = "crates/df_plugin_stl", version = "0.1.0" }
+df_plugin_gltf = { path = "crates/df_plugin_gltf", version = "0.1.0" }
+df_wasm = { path = "crates/df_wasm", version = "0.1.0" }
+
+base64 = "0.22"
+console_error_panic_hook = "0.1"
+js-sys = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+wasm-bindgen = "0.2"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+missing_debug_implementations = "allow"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+print_stdout = "allow"
+print_stderr = "allow"
+pedantic = { level = "allow", priority = -1 }
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = true
+panic = "abort"

@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@desktop-framework/electron/main": ["./packages/electron/src/main/index.ts"],
+      "@desktop-framework/electron/preload": ["./packages/electron/src/preload/index.ts"],
+      "@desktop-framework/electron/shared": ["./packages/electron/src/shared/index.ts"],
+      "@desktop-framework/electron": ["./packages/electron/src/index.ts"],
+      "@desktop-framework/*": ["./packages/*/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "types": ["node", "vite/client"],
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "jsx": "preserve"
+  },
+  "include": [
+    "packages/**/*.ts",
+    "packages/**/*.vue",
+    "packages/**/*.d.ts",
+    "playground/**/*.ts",
+    "playground/**/*.vue",
+    "playground/**/*.d.ts",
+    "scripts/**/*.mjs",
+    "*.ts",
+    "*.mts"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/out",
+    "**/target",
+    "submodules/**",
+    "docs/.vitepress/cache",
+    "docs/.vitepress/dist",
+    "packages/wasm/generated/**/*.js"
+  ]
+}

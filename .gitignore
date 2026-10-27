@@ -1,0 +1,44 @@
+# 依赖与构建产物
+node_modules/
+.pnpm-store/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+
+# Rust
+target/
+**/pkg/
+**/wasm-pack.log
+Cargo.lock.bak
+
+# Electron
+release/
+playground/desktop/release/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.blockmap
+
+# 文档
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+docs/.vitepress/.temp/
+
+# 编辑器与系统
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+*.log
+.env
+.env.*
+!.env.example
+
+# 测试与缓存
+.vitest/
+.eslintcache
+.rolldown/

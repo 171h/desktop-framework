@@ -1,0 +1,3 @@
+[submodule "submodules/nusys-ui"]
+	path = submodules/nusys-ui
+	url = https://github.com/171h/nusys-ui.git
