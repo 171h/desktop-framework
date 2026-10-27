@@ -1,0 +1,15 @@
+{
+  "name": "@desktop-framework/platform",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "跨平台宿主能力服务：统一封装 Electron preload 桥与浏览器降级，提供文件选择、保存、窗口控制、外部链接和运行时信息读取",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "cordis": "^4.0.0-rc.12"
+  }
+}
