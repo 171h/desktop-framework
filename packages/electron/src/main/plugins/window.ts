@@ -70,8 +70,9 @@ export async function apply(ctx: Context): Promise<void> {
     window.setMenuBarVisibility(false)
     window.webContents.setVisualZoomLevelLimits(1, 1)
 
+    let rendererReady = false
     const sendState = (): void => {
-      if (window.isDestroyed()) {
+      if (!rendererReady || window.isDestroyed()) {
         return
       }
       host.broadcastWindowState({
@@ -122,7 +123,9 @@ export async function apply(ctx: Context): Promise<void> {
     })
 
     window.webContents.on('did-finish-load', () => {
-      sendState()
+      rendererReady = true
+      // 初始窗口状态由渲染进程主动 invoke 获取；这里不再首帧 push，避免
+      // Electron 在极早期销毁临时 frame 时产生无意义的 IPC 拒绝。
       host.startup.mark('renderer-loaded')
     })
     window.webContents.on('did-fail-load', (_event, code, description, url) => {

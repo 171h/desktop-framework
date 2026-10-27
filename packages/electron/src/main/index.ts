@@ -142,6 +142,17 @@ function configureApplication(options: ElectronHostOptions): void {
     console.error('[electron] 未捕获异常', error)
   })
   process.on('unhandledRejection', (reason) => {
+    // Electron 在窗口首次 ready-to-show / reload 的极短窗口内可能抛出该
+    // frame 已销毁的竞态；窗口逻辑已经做了 isDestroyed 防护，这类噪声不
+    // 影响功能，但会污染启动日志。
+    const message = reason instanceof Error
+      ? reason.message
+      : typeof reason === 'object' && reason && 'message' in reason
+        ? String((reason as { message: unknown }).message)
+        : String(reason)
+    if (message.includes('Render frame was disposed')) {
+      return
+    }
     console.error('[electron] 未处理 Promise 拒绝', reason)
   })
 

@@ -94,6 +94,9 @@ export class ElectronHostService extends Service {
     if (!this.mainWindow || this.mainWindow.isDestroyed() || this.mainWindow.webContents.isDestroyed()) {
       return
     }
+    if (!this.mainWindow.webContents.getURL()) {
+      return
+    }
     this.mainWindow.webContents.send('df:window-state', state)
   }
 
