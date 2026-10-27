@@ -1,0 +1,15 @@
+{
+  "name": "@desktop-framework/kernel",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "基于 Cordis 的框架内核：负责创建根上下文、按依赖加载与卸载插件、记录加载耗时和失败原因，并提供运行时插件诊断能力",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "cordis": "^4.0.0-rc.12"
+  }
+}

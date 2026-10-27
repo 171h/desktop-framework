@@ -1,0 +1,19 @@
+{
+  "name": "@desktop-framework/keybindings",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "跨平台快捷键服务：解析 Mod/Cmd/Ctrl 组合、自动绑定命令定义中的快捷键、处理输入框豁免与命令注销清理，并生成平台化显示文本",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "cordis": "^4.0.0-rc.12"
+  },
+  "devDependencies": {
+    "@desktop-framework/kernel": "workspace:*"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@desktop-framework/vue",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vue 与 Pinia 桥接插件：在 Cordis 上下文中提供唯一 Pinia 实例，并把根上下文注入 Vue 组件树，供插件组件安全读取服务",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44"
+  }
+}

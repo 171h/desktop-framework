@@ -1,0 +1,17 @@
+{
+  "name": "@desktop-framework/vscode",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VS Code 能力适配层：统一导出 vscode-instantiation 的生命周期与实例化服务，并容纳待迁移的启动性能追踪代码，便于后续整体替换为 npm 包",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./lifecycle": "./src/lifecycle.ts",
+    "./instantiation": "./src/instantiation.ts",
+    "./performance": "./src/performance/index.ts"
+  },
+  "dependencies": {
+    "vscode-instantiation": "^1.2.0"
+  }
+}

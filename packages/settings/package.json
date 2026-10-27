@@ -1,0 +1,18 @@
+{
+  "name": "@desktop-framework/settings",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "命名空间化本地存储服务：为工作区布局、主题和用户偏好提供 JSON 持久化，在无 DOM 或隐私模式下自动回退到内存实现",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "cordis": "^4.0.0-rc.12"
+  },
+  "devDependencies": {
+    "@desktop-framework/kernel": "workspace:*"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@desktop-framework/core",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "桌面框架公共契约层：集中定义插件清单、命令、Ribbon、工作区、视口、桌面桥与运行时类型，以及跨包事件和零依赖工具函数",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "cordis": "^4.0.0-rc.12"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@desktop-framework/commands",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "统一命令注册表：维护命令元数据、动态启用与勾选状态、覆盖与恢复机制，并为 Ribbon、菜单、快捷键和命令面板提供唯一执行入口",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  },
+  "devDependencies": {
+    "@desktop-framework/kernel": "workspace:*"
+  }
+}
