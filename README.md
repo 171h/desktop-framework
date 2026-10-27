@@ -8,7 +8,7 @@
 
 - **一致**：标题栏、应用菜单、快速访问工具栏、Ribbon、停靠面板、视口和状态栏共享同一套坐标系与主题变量。
 - **插件化**：内核只负责生命周期与依赖注入；命令、Ribbon、面板、模型格式、渲染器、Electron 主进程能力全部是 Cordis 插件。
-- **高性能**：Rust + WebAssembly 处理模型解析与几何计算；WebGL2 视口采用脏标记按需渲染、DPR 上限、缓冲区复用与上下文丢失恢复。
+- **高性能**：Rust + WebAssembly 承担模糊搜索等热路径；渲染层采用脏标记按需绘制、DPR 上限与资源复用。
 - **可定制**：工作区布局、面板宽度、活动视图和主题可持久化；Ribbon 由命令元数据自动生成。
 - **可组合**：其他软件可以把本仓库作为 git submodule 引入，复用框架包并只编写自己的业务插件。
 - **跨平台**：Electron 主进程、构建脚本与 GitHub Actions 覆盖 Windows、macOS、Linux。
@@ -17,7 +17,7 @@
 
 ```text
 desktop-framework/
-├─ crates/                 # Rust：AST、几何、导入器、格式插件、WASM 绑定、CLI
+├─ crates/                 # Rust：高性能算法与 WASM 绑定
 ├─ packages/               # TypeScript：内核、UI、工作台、视口、Electron、格式桥接
 ├─ playground/             # 基于框架构建的示例应用（Web + Electron）
 ├─ docs/                   # VitePress 中文文档
@@ -81,11 +81,15 @@ export default definePlugin({
 
 Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享同一个命令注册表。界面不再各自维护按钮状态，而是从命令元数据生成，并通过 `enabled` / `checked` 惰性求值。
 
-### AST 驱动的模型管线
+### Rust / WASM 热路径
 
-`df_ast` 定义与格式无关的 3D 模型抽象语法树。格式插件（`df_plugin_obj`、`df_plugin_stl`、`df_plugin_gltf`）只负责把字节流转换为 AST；`df_geometry` 负责法线、包围盒、合并等几何操作；`df_wasm` 以 JSON 元数据 + TypedArray 几何缓冲的方式把结果交给前端，避免顶点数据经过 JSON。
+`df_fuzzy` 提供命令面板与插件搜索使用的模糊匹配内核；`df_wasm` 负责把结果以紧凑 JSON 暴露给前端。命令数量很大时，搜索仍在 WASM 线性内存中完成，主线程只处理最终结果，避免在 Vue 响应式对象上进行大列表排序。
 
-### 与 VS Code 一致的 Electron 优化
+### 借鉴 VS Code 的实现
+
+生命周期、实例化服务与性能标记直接使用 `vscode-instantiation`；框架不复制 VS Code 生命周期源码。仅在 `packages/vscode` 中维护尚未进入该 npm 包的适配代码，便于后续整体替换。
+
+#### Electron 优化
 
 - `contextIsolation` + `sandbox` + 关闭 `nodeIntegration`，preload 只暴露最小 IPC 面。
 - 窗口 `show: false` + `ready-to-show`，避免白屏；`v8CacheOptions: 'code'` 与持久化窗口状态缩短二次启动。
@@ -95,26 +99,37 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
 
 ## 使用框架开发自己的软件
 
-```bash
-git submodule add https://github.com/171h/desktop-framework.git vendor/desktop-framework
+使用方不再需要把框架源码作为 submodule 长期维护。在 `desktop-framework.config.json` 中声明框架仓库与精确 commit：
+
+```json
+{
+  "framework": {
+    "repository": "https://github.com/171h/desktop-framework",
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "runtime": {
+      "asset": "desktop-framework-runtime-{shortCommit}.tar.gz",
+      "entry": "index.js",
+      "integrity": "sha256-..."
+    }
+  }
+}
 ```
 
-在宿主仓库的 `pnpm-workspace.yaml` 中加入：
+应用启动时，`@desktop-framework/bootstrap` 会：
 
-```yaml
-packages:
-  - vendor/desktop-framework/packages/*
-  - apps/*
-```
+1. 计算配置的版本缓存键，并在本地缓存中查找；
+2. 未命中时从对应 commit 的 GitHub Release / 制品地址拉取运行时归档；
+3. 校验 SHA-256、manifest 中的 commit 与入口文件；
+4. 解压到受控缓存目录，通过 `df-runtime://` 协议加载；
+5. 缓存命中时直接启动，不重复下载。
 
-然后依赖 `@desktop-framework/app` 等 workspace 包，传入自己的插件清单即可。详见 [集成指南](./docs/guide/integration.md)。
+宿主自己的业务仍然以插件形式开发，通过配置或运行时插件清单加载。详见 [集成指南](./docs/guide/integration.md) 与 [运行时拉取](./docs/architecture/runtime-pull.md)。
 
 ## 文档
 
 - [架构总览](./docs/architecture/overview.md)
 - [AutoDesk 设计借鉴](./docs/design/autodesk.md)
 - [插件系统](./docs/guide/plugins.md)
-- [模型 AST](./docs/architecture/model-ast.md)
 - [Electron 宿主](./docs/architecture/electron.md)
 - [跨平台构建](./docs/guide/cross-platform.md)
 

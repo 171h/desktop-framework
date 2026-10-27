@@ -1,0 +1,18 @@
+[package]
+name = "df_fuzzy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "基于子序列匹配的命令面板与插件搜索内核，支持单词边界、驼峰与连续字符加分，可编译为 WebAssembly"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+serde.workspace = true
+
+[lints]
+workspace = true
