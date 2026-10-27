@@ -1,0 +1,23 @@
+{
+  "name": "@desktop-framework/workbench",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "工作台核心服务：使用 Pinia 管理左右及底部停靠面板、活动视图、Ribbon 折叠状态和可保存工作区，并负责布局持久化与视图注册",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/settings": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44"
+  },
+  "devDependencies": {
+    "@desktop-framework/kernel": "workspace:*"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@desktop-framework/ui",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "基于 nusys-ui 的界面基础层：提供 AutoDesk 风格主题令牌、Codicon 引导、声明式槽位、Ribbon 与分栏 Vue 包装器以及通用对话框",
+  "sideEffects": [
+    "**/*.css",
+    "./src/nusys.ts"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./src/theme.css",
+    "./components/*": "./src/components/*"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/settings": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@vscode/codicons": "^0.0.46-24",
+    "cordis": "^4.0.0-rc.12",
+    "nusys-ui": "^4.2.1",
+    "vue": "^3.5.44"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@desktop-framework/output",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "description": "输出与诊断面板插件：订阅内核、命令、工作区和主题事件，维护有界运行日志并支持清空与主题切换",
+  "exports": {
+    ".": "./src/index.ts",
+    "./OutputView.vue": "./src/OutputView.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@desktop-framework/workbench": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}

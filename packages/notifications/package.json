@@ -1,0 +1,18 @@
+{
+  "name": "@desktop-framework/notifications",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "通知中心插件：维护 Vue 响应式通知队列，支持自动关闭、错误事件桥接与堆叠通知界面，统一呈现命令失败和业务反馈",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./NotificationStack.vue": "./src/NotificationStack.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@desktop-framework/explorer",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "资源浏览器插件：使用 nusys-ui 树组件展示工作区与已加载插件，支持筛选、切换工作区和查看插件加载状态与耗时",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./ExplorerView.vue": "./src/ExplorerView.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/selection": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@desktop-framework/workbench": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}

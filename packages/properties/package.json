@@ -1,0 +1,22 @@
+{
+  "name": "@desktop-framework/properties",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "通用属性面板插件：根据选择服务展示插件、工作区、画布节点和运行环境信息，并提供清除选择与关键指标查看",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./PropertiesView.vue": "./src/PropertiesView.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/selection": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@desktop-framework/wasm": "workspace:*",
+    "@desktop-framework/workbench": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}

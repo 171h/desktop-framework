@@ -1,0 +1,23 @@
+{
+  "name": "@desktop-framework/menu",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "应用菜单与快速访问工具栏插件：从命令元数据生成分组菜单，展示工作区切换、快捷键和插件统计，并提供标题栏快速访问按钮",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./AppMenu.vue": "./src/AppMenu.vue",
+    "./QuickAccess.vue": "./src/QuickAccess.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/keybindings": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@desktop-framework/workbench": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}

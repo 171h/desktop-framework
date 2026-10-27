@@ -1,0 +1,19 @@
+{
+  "name": "@desktop-framework/statusbar",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "可扩展状态栏插件：允许任意插件注册左右对齐状态项，支持动态文本、图标、命令跳转和实时状态消息，并由统一组件渲染",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./StatusBar.vue": "./src/StatusBar.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}

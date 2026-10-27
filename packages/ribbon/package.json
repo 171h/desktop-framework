@@ -1,0 +1,27 @@
+{
+  "name": "@desktop-framework/ribbon",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AutoDesk 风格 Ribbon 插件：从命令元数据自动聚合页签、功能组和按钮，实时求值启用与勾选状态，并提供 nusys-ui 功能区组件",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./RibbonBar.vue": "./src/RibbonBar.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/keybindings": "workspace:*",
+    "@desktop-framework/settings": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@desktop-framework/workbench": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "nusys-ui": "^4.2.1",
+    "vue": "^3.5.44"
+  },
+  "devDependencies": {
+    "@desktop-framework/kernel": "workspace:*"
+  }
+}

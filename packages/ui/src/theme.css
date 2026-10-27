@@ -1,0 +1,290 @@
+/* =========================================================================
+   desktop-framework 主题令牌
+   -------------------------------------------------------------------------
+   nusys-ui 读取 --vscode-* 变量。本文件把框架的 AutoDesk 风格配色映射到
+   这些变量，保证所有 Web Components 的 Shadow DOM 内部一致。
+   ========================================================================= */
+
+:root,
+:root[data-theme='graphite'] {
+  color-scheme: dark;
+
+  --df-canvas: #141619;
+  --df-surface: #1b1e22;
+  --df-elevated: #22262b;
+  --df-statusbar: #15181c;
+  --df-titlebar: #101215;
+  --df-border: #323840;
+  --df-border-strong: #48515d;
+  --df-text: #e7e9ec;
+  --df-muted: #98a0aa;
+  --df-faint: #6d7681;
+  --df-accent: #e2a244;
+  --df-accent-strong: #f2b95f;
+  --df-selection: #3d8bfd;
+  --df-hover: #272c33;
+  --df-active: #313842;
+  --df-success: #55c878;
+  --df-warning: #f0b44c;
+  --df-danger: #f06d6d;
+  --df-shadow: rgb(0 0 0 / 38%);
+
+  --vscode-font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --vscode-font-size: 12px;
+  --vscode-font-weight: 400;
+  --vscode-editor-font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+
+  --vscode-foreground: var(--df-text);
+  --vscode-descriptionForeground: var(--df-muted);
+  --vscode-disabledForeground: var(--df-faint);
+  --vscode-editor-background: var(--df-surface);
+  --vscode-sideBar-background: var(--df-surface);
+  --vscode-sideBarSectionHeader-background: var(--df-elevated);
+  --vscode-sideBarTitle-foreground: var(--df-text);
+  --vscode-panel-background: var(--df-surface);
+  --vscode-panel-border: var(--df-border);
+  --vscode-panelTitle-activeBorder: var(--df-accent);
+  --vscode-panelTitle-activeForeground: var(--df-text);
+  --vscode-panelTitle-inactiveForeground: var(--df-muted);
+  --vscode-focusBorder: var(--df-accent);
+  --vscode-selection-background: color-mix(in srgb, var(--df-selection) 35%, transparent);
+  --vscode-widget-shadow: var(--df-shadow);
+  --vscode-widget-border: var(--df-border-strong);
+
+  --vscode-input-background: #111317;
+  --vscode-input-foreground: var(--df-text);
+  --vscode-input-border: var(--df-border);
+  --vscode-input-placeholderForeground: var(--df-faint);
+  --vscode-inputOption-activeBackground: color-mix(in srgb, var(--df-accent) 22%, transparent);
+  --vscode-inputOption-activeBorder: var(--df-accent);
+  --vscode-inputOption-activeForeground: var(--df-text);
+
+  --vscode-button-background: #2f7fd6;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #3a8ee8;
+  --vscode-button-secondaryBackground: var(--df-elevated);
+  --vscode-button-secondaryForeground: var(--df-text);
+  --vscode-button-secondaryHoverBackground: var(--df-hover);
+  --vscode-button-border: color-mix(in srgb, var(--df-text) 8%, transparent);
+
+  --vscode-toolbar-hoverBackground: var(--df-hover);
+  --vscode-toolbar-activeBackground: var(--df-active);
+  --vscode-toolbar-hoverOutline: transparent;
+
+  --vscode-menu-background: var(--df-elevated);
+  --vscode-menu-border: var(--df-border-strong);
+  --vscode-menu-foreground: var(--df-text);
+  --vscode-menu-selectionBackground: var(--df-selection);
+  --vscode-menu-selectionForeground: #ffffff;
+  --vscode-menu-separatorBackground: var(--df-border);
+
+  --vscode-list-hoverBackground: var(--df-hover);
+  --vscode-list-activeSelectionBackground: color-mix(in srgb, var(--df-selection) 30%, transparent);
+  --vscode-list-activeSelectionForeground: var(--df-text);
+  --vscode-list-inactiveSelectionBackground: var(--df-active);
+  --vscode-list-focusOutline: var(--df-selection);
+  --vscode-list-focusAndSelectionOutline: var(--df-selection);
+
+  --vscode-tabs-selectedBackground: var(--df-surface);
+  --vscode-tabs-unselectedBackground: var(--df-titlebar);
+  --vscode-tab-activeBackground: var(--df-surface);
+  --vscode-tab-inactiveBackground: var(--df-titlebar);
+  --vscode-tab-activeForeground: var(--df-text);
+  --vscode-tab-inactiveForeground: var(--df-muted);
+  --vscode-tab-border: var(--df-border);
+  --vscode-tab-activeBorderTop: var(--df-accent);
+
+  --vscode-table-headerBackground: var(--df-elevated);
+  --vscode-table-rowBackground: var(--df-surface);
+  --vscode-table-alternateRowBackground: color-mix(in srgb, var(--df-surface) 85%, black);
+  --vscode-table-border: var(--df-border);
+
+  --vscode-sash-hoverBorder: var(--df-accent);
+  --vscode-tree-indentGuidesStroke: var(--df-border);
+  --vscode-tree-inactiveIndentGuidesStroke: color-mix(in srgb, var(--df-border) 60%, transparent);
+
+  --vscode-scrollbarSlider-background: rgb(255 255 255 / 12%);
+  --vscode-scrollbarSlider-hoverBackground: rgb(255 255 255 / 22%);
+  --vscode-scrollbarSlider-activeBackground: rgb(255 255 255 / 30%);
+  --vscode-progressBar-background: var(--df-accent);
+
+  --vscode-keybindingLabel-background: var(--df-elevated);
+  --vscode-keybindingLabel-foreground: var(--df-text);
+  --vscode-keybindingLabel-border: var(--df-border);
+  --vscode-keybindingLabel-bottomBorder: var(--df-border-strong);
+
+  --vsc-ribbon-tabs-height: 31px;
+  --vsc-ribbon-items-height: 68px;
+  --vsc-ribbon-icon-size: 30px;
+  --vsc-ribbon-compact-icon-size: 20px;
+}
+
+:root[data-theme='porcelain'] {
+  color-scheme: light;
+
+  --df-canvas: #eef0f3;
+  --df-surface: #f8f9fb;
+  --df-elevated: #ffffff;
+  --df-statusbar: #e8ebef;
+  --df-titlebar: #f4f6f8;
+  --df-border: #d5dae1;
+  --df-border-strong: #b7bec8;
+  --df-text: #20242a;
+  --df-muted: #5e6874;
+  --df-faint: #8d96a1;
+  --df-accent: #b87514;
+  --df-accent-strong: #d58c24;
+  --df-selection: #1f6fd0;
+  --df-hover: #e9edf2;
+  --df-active: #dfe5ec;
+  --df-success: #248a4b;
+  --df-warning: #9a6508;
+  --df-danger: #c23b3b;
+  --df-shadow: rgb(34 44 56 / 18%);
+
+  --vscode-foreground: var(--df-text);
+  --vscode-descriptionForeground: var(--df-muted);
+  --vscode-disabledForeground: var(--df-faint);
+  --vscode-editor-background: var(--df-surface);
+  --vscode-sideBar-background: var(--df-surface);
+  --vscode-sideBarSectionHeader-background: var(--df-elevated);
+  --vscode-sideBarTitle-foreground: var(--df-text);
+  --vscode-panel-background: var(--df-surface);
+  --vscode-panel-border: var(--df-border);
+  --vscode-panelTitle-activeBorder: var(--df-accent);
+  --vscode-panelTitle-activeForeground: var(--df-text);
+  --vscode-panelTitle-inactiveForeground: var(--df-muted);
+  --vscode-focusBorder: var(--df-selection);
+  --vscode-selection-background: color-mix(in srgb, var(--df-selection) 20%, transparent);
+  --vscode-widget-shadow: var(--df-shadow);
+  --vscode-widget-border: var(--df-border-strong);
+
+  --vscode-input-background: #ffffff;
+  --vscode-input-foreground: var(--df-text);
+  --vscode-input-border: var(--df-border);
+  --vscode-input-placeholderForeground: var(--df-faint);
+  --vscode-inputOption-activeBackground: color-mix(in srgb, var(--df-accent) 16%, transparent);
+  --vscode-inputOption-activeBorder: var(--df-accent);
+  --vscode-inputOption-activeForeground: var(--df-text);
+
+  --vscode-button-background: #1f6fd0;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #185fb4;
+  --vscode-button-secondaryBackground: var(--df-elevated);
+  --vscode-button-secondaryForeground: var(--df-text);
+  --vscode-button-secondaryHoverBackground: var(--df-hover);
+  --vscode-button-border: color-mix(in srgb, var(--df-text) 10%, transparent);
+
+  --vscode-toolbar-hoverBackground: var(--df-hover);
+  --vscode-toolbar-activeBackground: var(--df-active);
+  --vscode-toolbar-hoverOutline: transparent;
+
+  --vscode-menu-background: var(--df-elevated);
+  --vscode-menu-border: var(--df-border-strong);
+  --vscode-menu-foreground: var(--df-text);
+  --vscode-menu-selectionBackground: var(--df-selection);
+  --vscode-menu-selectionForeground: #ffffff;
+  --vscode-menu-separatorBackground: var(--df-border);
+
+  --vscode-list-hoverBackground: var(--df-hover);
+  --vscode-list-activeSelectionBackground: color-mix(in srgb, var(--df-selection) 18%, transparent);
+  --vscode-list-activeSelectionForeground: var(--df-text);
+  --vscode-list-inactiveSelectionBackground: var(--df-active);
+  --vscode-list-focusOutline: var(--df-selection);
+  --vscode-list-focusAndSelectionOutline: var(--df-selection);
+
+  --vscode-tabs-selectedBackground: var(--df-surface);
+  --vscode-tabs-unselectedBackground: var(--df-titlebar);
+  --vscode-tab-activeBackground: var(--df-surface);
+  --vscode-tab-inactiveBackground: var(--df-titlebar);
+  --vscode-tab-activeForeground: var(--df-text);
+  --vscode-tab-inactiveForeground: var(--df-muted);
+  --vscode-tab-border: var(--df-border);
+  --vscode-tab-activeBorderTop: var(--df-accent);
+
+  --vscode-table-headerBackground: var(--df-elevated);
+  --vscode-table-rowBackground: var(--df-surface);
+  --vscode-table-alternateRowBackground: #f1f4f8;
+  --vscode-table-border: var(--df-border);
+
+  --vscode-sash-hoverBorder: var(--df-selection);
+  --vscode-tree-indentGuidesStroke: var(--df-border);
+  --vscode-tree-inactiveIndentGuidesStroke: color-mix(in srgb, var(--df-border) 70%, transparent);
+
+  --vscode-scrollbarSlider-background: rgb(0 0 0 / 14%);
+  --vscode-scrollbarSlider-hoverBackground: rgb(0 0 0 / 22%);
+  --vscode-scrollbarSlider-activeBackground: rgb(0 0 0 / 30%);
+  --vscode-progressBar-background: var(--df-accent);
+
+  --vscode-keybindingLabel-background: var(--df-elevated);
+  --vscode-keybindingLabel-foreground: var(--df-text);
+  --vscode-keybindingLabel-border: var(--df-border);
+  --vscode-keybindingLabel-bottomBorder: var(--df-border-strong);
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--df-canvas);
+  color: var(--df-text);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--df-selection) 38%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.df-app-region-drag {
+  -webkit-app-region: drag;
+}
+
+.df-app-region-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.df-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
