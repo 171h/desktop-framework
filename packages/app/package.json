@@ -1,0 +1,42 @@
+{
+  "name": "@desktop-framework/app",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "框架应用装配层：提供默认插件清单、AutoDesk 风格 AppShell、应用命令、启动计时与 Vue 挂载流程，宿主只需配置挂载节点和业务插件",
+  "sideEffects": [
+    "**/*.css",
+    "**/*.vue"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./AppShell.vue": "./src/AppShell.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/explorer": "workspace:*",
+    "@desktop-framework/kernel": "workspace:*",
+    "@desktop-framework/keybindings": "workspace:*",
+    "@desktop-framework/menu": "workspace:*",
+    "@desktop-framework/notifications": "workspace:*",
+    "@desktop-framework/output": "workspace:*",
+    "@desktop-framework/platform": "workspace:*",
+    "@desktop-framework/properties": "workspace:*",
+    "@desktop-framework/ribbon": "workspace:*",
+    "@desktop-framework/selection": "workspace:*",
+    "@desktop-framework/settings": "workspace:*",
+    "@desktop-framework/statusbar": "workspace:*",
+    "@desktop-framework/surface": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vscode": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@desktop-framework/wasm": "workspace:*",
+    "@desktop-framework/workbench": "workspace:*",
+    "@vscode/codicons": "^0.0.46-24",
+    "cordis": "^4.0.0-rc.12",
+    "nusys-ui": "^4.2.1",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44"
+  }
+}

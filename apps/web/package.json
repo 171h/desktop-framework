@@ -1,0 +1,23 @@
+{
+  "name": "@desktop-framework/app-web",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "浏览器版示例应用：使用 Vite 加载框架工作台与插件实验室，演示无需 Electron 的统一布局、命令、Ribbon 与 WebGL 画布",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@desktop-framework/playground": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "vue": "^3.5.44"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.10",
+    "unocss": "^66.12.0",
+    "vite": "^8.3.5"
+  }
+}

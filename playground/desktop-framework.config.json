@@ -1,0 +1,19 @@
+{
+  "$schema": "./desktop-framework.schema.json",
+  "framework": {
+    "repository": "https://github.com/171h/desktop-framework",
+    "commit": "0000000000000000000000000000000000000000",
+    "mode": "workspace",
+    "entry": "index.js",
+    "artifact": {
+      "url": "https://github.com/171h/desktop-framework/releases/download/framework-{shortCommit}/desktop-framework-runtime-{shortCommit}.tar.gz",
+      "integrity": ""
+    },
+    "cache": true,
+    "timeoutMs": 15000
+  },
+  "app": {
+    "id": "dev.desktop-framework.playground",
+    "title": "Desktop Framework Playground"
+  }
+}

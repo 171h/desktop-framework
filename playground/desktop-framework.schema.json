@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/171h/desktop-framework/playground/desktop-framework.schema.json",
+  "title": "Desktop Framework Runtime Configuration",
+  "type": "object",
+  "required": ["framework"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "framework": {
+      "type": "object",
+      "required": ["repository", "commit"],
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^https?://",
+          "description": "框架 git 仓库地址"
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 7,
+          "description": "框架 commit，推荐完整 40 位哈希"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["workspace", "remote", "auto"],
+          "default": "auto",
+          "description": "workspace 使用内置版本，remote 强制拉取，auto 失败回退"
+        },
+        "entry": {
+          "type": "string",
+          "default": "index.js",
+          "description": "运行时入口文件（归档内相对路径）"
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "制品地址，支持 {commit}、{shortCommit}、{repository}"
+            },
+            "integrity": {
+              "type": "string",
+              "description": "SHA-256 SRI 或 sha256:<hex>"
+            }
+          }
+        },
+        "cache": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否复用本地缓存"
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "default": 15000,
+          "description": "下载与解析超时"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "额外 HTTP 头"
+        }
+      }
+    },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

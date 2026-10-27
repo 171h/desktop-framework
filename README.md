@@ -2,15 +2,15 @@
 
 面向复杂桌面软件的**插件化跨平台应用框架**。它把 AutoDesk 系列软件中长期验证过的界面组织方式——统一工作区、Ribbon 功能区、模块化工具栏、可保存的工作区布局、命令驱动的交互——抽象为可复用的 Vue 3 + Electron + Rust/WASM 基础设施。
 
-> 当前处于 `0.1` 架构预览阶段。框架本身即示例：`playground/` 中的应用完全通过公开插件 API 组装。
+> 当前处于 `0.1` 架构预览阶段。框架本身即示例：`apps/` 与 `playground/` 中的应用完全通过公开插件 API 组装。
 
 ## 设计目标
 
 - **一致**：标题栏、应用菜单、快速访问工具栏、Ribbon、停靠面板、视口和状态栏共享同一套坐标系与主题变量。
-- **插件化**：内核只负责生命周期与依赖注入；命令、Ribbon、面板、模型格式、渲染器、Electron 主进程能力全部是 Cordis 插件。
+- **插件化**：内核只负责生命周期与依赖注入；命令、Ribbon、面板、渲染器、Electron 主进程能力全部是 Cordis 插件。
 - **高性能**：Rust + WebAssembly 承担模糊搜索等热路径；渲染层采用脏标记按需绘制、DPR 上限与资源复用。
 - **可定制**：工作区布局、面板宽度、活动视图和主题可持久化；Ribbon 由命令元数据自动生成。
-- **可组合**：其他软件可以把本仓库作为 git submodule 引入，复用框架包并只编写自己的业务插件。
+- **可组合**：其他软件通过配置文件声明框架仓库与 commit，启动时自动拉取对应运行时，并只编写自己的业务插件。
 - **跨平台**：Electron 主进程、构建脚本与 GitHub Actions 覆盖 Windows、macOS、Linux。
 
 ## 目录结构
@@ -18,8 +18,9 @@
 ```text
 desktop-framework/
 ├─ crates/                 # Rust：高性能算法与 WASM 绑定
-├─ packages/               # TypeScript：内核、UI、工作台、视口、Electron、格式桥接
-├─ playground/             # 基于框架构建的示例应用（Web + Electron）
+├─ packages/               # TypeScript：内核、UI、工作台、画布、Electron、运行时加载器
+├─ apps/                   # 基于框架构建的 Web 与 Electron 示例应用
+├─ playground/             # 示例插件与运行时配置
 ├─ docs/                   # VitePress 中文文档
 ├─ submodules/nusys-ui/    # 唯一 UI 组件来源（git submodule）
 ├─ scripts/                # WASM 与子模块辅助脚本

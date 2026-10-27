@@ -1,0 +1,41 @@
+appId: dev.desktop-framework.playground
+productName: Desktop Framework
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+asar: true
+npmRebuild: false
+extraResources:
+  - from: ../../playground/desktop-framework.config.json
+    to: desktop-framework.config.json
+  - from: ../../docs
+    to: docs
+    filter:
+      - '**/*.md'
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+win:
+  target:
+    - nsis
+  # 未提供签名证书时保持未签名，CI 可通过 CSC_LINK 注入。
+  signAndEditExecutable: true
+mac:
+  target:
+    - dmg
+  category: public.app-category.developer-tools
+  hardenedRuntime: true
+  gatekeeperAssess: false
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

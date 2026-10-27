@@ -1,0 +1,32 @@
+{
+  "name": "@desktop-framework/app-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron 桌面示例应用：配置安全窗口、运行时拉取与 electron-builder 跨平台安装包，同时复用插件实验室进行端到端验证",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "dist": "electron-vite build && electron-builder"
+  },
+  "dependencies": {
+    "@desktop-framework/bootstrap": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/electron": "workspace:*",
+    "@desktop-framework/kernel": "workspace:*",
+    "@desktop-framework/platform": "workspace:*",
+    "@desktop-framework/playground": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vscode": "workspace:*",
+    "electron": "^45.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.10",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "unocss": "^66.12.0",
+    "vite": "^8.3.5",
+    "vue": "^3.5.44"
+  }
+}

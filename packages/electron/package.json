@@ -1,0 +1,26 @@
+{
+  "name": "@desktop-framework/electron",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "借鉴 VS Code 的 Electron 宿主库：以插件组织主进程生命周期、运行时、受控协议、窗口、IPC、原生菜单与会话安全，提供安全的 preload 桌面桥",
+  "sideEffects": [
+    "./src/preload/index.ts"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./main": "./src/main/index.ts",
+    "./preload": "./src/preload/index.ts",
+    "./shared": "./src/shared/index.ts"
+  },
+  "peerDependencies": {
+    "electron": ">=45.0.0"
+  },
+  "dependencies": {
+    "@desktop-framework/bootstrap": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/kernel": "workspace:*",
+    "@desktop-framework/vscode": "workspace:*",
+    "cordis": "^4.0.0-rc.12"
+  }
+}
