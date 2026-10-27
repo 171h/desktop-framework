@@ -4,7 +4,10 @@ import UnoCSS from 'unocss/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [vue(), UnoCSS()],
+  plugins: [
+    vue(),
+    UnoCSS(),
+  ],
   resolve: {
     alias: {
       '@desktop-framework': fileURLToPath(new URL('./packages', import.meta.url)),

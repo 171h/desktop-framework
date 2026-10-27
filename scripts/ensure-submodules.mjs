@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process'
 /**
  * 确保 nusys-ui submodule 已检出。
  *
@@ -6,7 +7,6 @@
  * 此时只给出提示，不让依赖安装失败。CI 使用 actions/checkout 的 submodules 选项。
  */
 import { existsSync } from 'node:fs'
-import { spawnSync } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -24,7 +24,14 @@ if (!existsSync(resolve(root, '.git'))) {
 }
 
 console.log('[desktop-framework] 正在初始化 nusys-ui 子模块…')
-const result = spawnSync('git', ['submodule', 'update', '--init', '--depth', '1', 'submodules/nusys-ui'], {
+const result = spawnSync('git', [
+  'submodule',
+  'update',
+  '--init',
+  '--depth',
+  '1',
+  'submodules/nusys-ui',
+], {
   cwd: root,
   stdio: 'inherit',
   shell: process.platform === 'win32',

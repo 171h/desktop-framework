@@ -9,12 +9,13 @@ coverage/
 # Rust
 target/
 **/pkg/
+packages/runtime/release/
 **/wasm-pack.log
 Cargo.lock.bak
 
 # Electron
 release/
-playground/desktop/release/
+apps/desktop/release/
 *.exe
 *.dmg
 *.AppImage

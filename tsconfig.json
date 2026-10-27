@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "useDefineForClassFields": true,
+    "jsx": "preserve",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "useDefineForClassFields": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
@@ -23,13 +24,15 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "jsx": "preserve"
+    "skipLibCheck": true
   },
   "include": [
     "packages/**/*.ts",
     "packages/**/*.vue",
     "packages/**/*.d.ts",
+    "apps/**/*.ts",
+    "apps/**/*.vue",
+    "apps/**/*.d.ts",
     "playground/**/*.ts",
     "playground/**/*.vue",
     "playground/**/*.d.ts",

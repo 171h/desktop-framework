@@ -11,6 +11,7 @@ export default antfu({
   vue: true,
   typescript: true,
   unocss: true,
+  markdown: false,
   formatters: false,
   stylistic: {
     indent: 2,
@@ -38,15 +39,18 @@ export default antfu({
     'ts/no-explicit-any': 'warn',
     'vue/multi-word-component-names': 'off',
     'vue/component-name-in-template-casing': ['error', 'PascalCase'],
-    'vue/no-deprecated-slot-attribute': ['error', {
-      ignoreParents: [
-        'vscode-ribbon',
-        'vscode-split-layout',
-        'vscode-tabs',
-        'vscode-textfield',
-        'vscode-tree-item',
-      ],
-    }],
+    'vue/no-deprecated-slot-attribute': [
+      'error',
+      {
+        ignoreParents: [
+          'vscode-ribbon',
+          'vscode-split-layout',
+          'vscode-tabs',
+          'vscode-textfield',
+          'vscode-tree-item',
+        ],
+      },
+    ],
     'unocss/order': 'warn',
   },
 })

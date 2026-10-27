@@ -1,16 +1,26 @@
+# 使用最新版本进行框架开发，关闭默认的发布冷却期
+minimumReleaseAge: 0
+minimumReleaseAgeExcludePrune: true
+
+trustPolicy: no-downgrade
+# electron-builder / vitepress 的传递依赖仍使用旧 semver，无法直接升级。
+trustPolicyExclude:
+  - semver@5.7.2
+  - semver@6.3.1
+
+# Windows 上保持 POSIX 脚本语义
+shellEmulator: true
+
 packages:
   - packages/*
+  - apps/*
   - playground/*
   - docs
 
-# 使用最新版本进行框架开发，关闭默认的发布冷却期
-minimumReleaseAge: 0
 # pnpm 12 的安装脚本许可列表
 allowBuilds:
   electron: true
   electron-winstaller: true
   esbuild: true
-  wasm-pack: true
   sharp: true
-# Windows 上保持 POSIX 脚本语义
-shellEmulator: true
+  wasm-pack: true
