@@ -1,0 +1,16 @@
+{
+  "name": "@desktop-framework/bootstrap",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "框架运行时加载器：解析 framework 仓库与 commit 配置，按缓存键下载或复用运行时制品，校验 SHA-256、commit 与入口文件后返回可加载路径",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "tar": "^7.5.22"
+  }
+}

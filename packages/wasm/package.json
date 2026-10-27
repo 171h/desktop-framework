@@ -1,0 +1,15 @@
+{
+  "name": "@desktop-framework/wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rust/WASM 桥接服务：加载 wasm-bindgen 生成的模糊搜索模块，提供类型化调用、状态跟踪以及在 WASM 不可用时的等价 TypeScript 降级",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@desktop-framework/core": "workspace:*",
+    "cordis": "^4.0.0-rc.12"
+  }
+}

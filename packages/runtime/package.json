@@ -1,0 +1,27 @@
+{
+  "name": "@desktop-framework/runtime",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "框架远程运行时入口：将应用外壳、默认插件预设、Cordis 内核和公共 API 打包为可按 commit 拉取的 ESM 制品与样式资源",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@desktop-framework/app": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.10",
+    "unocss": "^66.12.0",
+    "vite": "^8.3.5",
+    "vue": "^3.5.44"
+  }
+}

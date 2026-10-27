@@ -1,0 +1,23 @@
+{
+  "name": "@desktop-framework/surface",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WebGL2 无限画布工作区：按需渲染网格与轴向，支持平移缩放、卡片拖拽和选择，并通过服务向其他插件开放画布数据与视图扩展点",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./SurfaceView.vue": "./src/SurfaceView.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/selection": "workspace:*",
+    "@desktop-framework/statusbar": "workspace:*",
+    "@desktop-framework/ui": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "@desktop-framework/workbench": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}
