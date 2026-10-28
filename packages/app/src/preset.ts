@@ -26,6 +26,7 @@ import pinia from '@df/vue'
 import wasm from '@df/wasm'
 import workbench from '@df/workbench'
 import appCommands from './commands'
+import windowSync from './window-sync'
 
 export interface PresetOptions {
   /** 只加载这些插件 id。 */
@@ -122,6 +123,12 @@ export function createDefaultPreset(options: PresetOptions = {}): PluginEntry[] 
       name: '选择状态',
       version: '0.1.0',
       description: '跨插件共享选中对象',
+    }),
+    pluginEntry(windowSync, undefined, {
+      id: 'framework:window-sync',
+      name: '跨窗口状态同步',
+      version: '0.1.0',
+      description: '在独立窗口之间同步选择状态',
     }),
     pluginEntry(explorer, undefined, {
       id: 'framework:explorer',

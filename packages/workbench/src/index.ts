@@ -9,6 +9,7 @@
  */
 import type {
   CommandDefinition,
+  DetachedPanelPayload,
   DockEdge,
   DockGroupNode,
   DockingLayout,
@@ -28,7 +29,7 @@ import type { PersistedWorkbench } from './store'
 import { clamp, errorMessage } from '@df/core'
 import { Service } from 'cordis'
 import { markRaw, ref, watch } from 'vue'
-import { allNodes, cloneDocking, containsNode, dockPanel, ensurePanel, findGroup, floatPanel, groupForView, movePanel, sanitizeGeometry, sideForGroup } from './docking'
+import { allNodes, cloneDocking, containsNode, dockPanel, ensurePanel, findGroup, floatPanel, groupForView, movePanel, sanitizeGeometry, sideForGroup, visitNodes } from './docking'
 import { BUILTIN_WORKSPACES, defaultFloatingDock, useWorkbenchStore } from './store'
 
 export * from './docking'
@@ -198,6 +199,42 @@ export class WorkbenchService extends Service {
     return floatPanel(this.docking, groupId, geometry, viewId)
   }
 
+  /** 生成拖出到独立面板窗口所需的描述。 */
+  detachPanelPayload(id: string): DetachedPanelPayload | undefined {
+    const panel = this.docking.floating.find(candidate => candidate.id === id)
+    if (!panel) {
+      return
+    }
+    const node = this.pruneDetachedNode(panel.node)
+    if (!node) {
+      return
+    }
+    return {
+      title: this.detachedPanelTitle(node),
+      node,
+      width: panel.geometry.width,
+      height: panel.geometry.height,
+    }
+  }
+
+  /** 将已经转移到独立窗口的浮动面板从当前工作台移除。 */
+  removeFloatingPanel(id: string): void {
+    const index = this.docking.floating.findIndex(panel => panel.id === id)
+    if (index < 0) {
+      return
+    }
+    const [panel] = this.docking.floating.splice(index, 1)
+    if (!panel) {
+      return
+    }
+    for (const side of ['left', 'right'] as const) {
+      const legacy = this.legacyGroup(side)
+      if (legacy && containsNode(panel.node, legacy) && this.layout[side].floating) {
+        this.store.layout[side].floating = null
+      }
+    }
+  }
+
   dockPanel(groupId: string, side: DockEdge): void {
     dockPanel(this.docking, groupId, side)
   }
@@ -265,6 +302,52 @@ export class WorkbenchService extends Service {
     return (active
       ? groupForView(this.docking, active)
       : undefined)?.id ?? this.panelGroup(`legacy-${location}`)?.id
+  }
+
+  private pruneDetachedNode(node: DockNode): DockNode | null {
+    if (node.type === 'group') {
+      const views = node.views.filter(id => this.viewMap.value.has(id) && !this.docking.hidden.includes(id))
+      if (!views.length) {
+        return null
+      }
+      return {
+        type: 'group',
+        id: node.id,
+        views,
+        activeView: views.includes(node.activeView ?? '')
+          ? node.activeView
+          : views[0],
+      }
+    }
+    const first = this.pruneDetachedNode(node.children[0])
+    const second = this.pruneDetachedNode(node.children[1])
+    if (!first) {
+      return second
+    }
+    if (!second) {
+      return first
+    }
+    return {
+      ...node,
+      children: [first, second],
+    }
+  }
+
+  private detachedPanelTitle(node: DockNode): string {
+    let title = '面板'
+    visitNodes(node, (current) => {
+      if (current.type !== 'group' || title !== '面板') {
+        return
+      }
+      const id = current.activeView ?? current.views[0]
+      const view = id
+        ? this.viewMap.value.get(id)
+        : undefined
+      if (view) {
+        title = view.title
+      }
+    })
+    return title
   }
 
   /** 工作区列表。 */

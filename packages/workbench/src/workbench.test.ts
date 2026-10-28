@@ -126,6 +126,29 @@ describe('workbench', () => {
     await ctx.kernel.dispose()
   })
 
+  it('creates a portable payload for a floating panel and removes it', async () => {
+    const { ctx } = await setup()
+    ctx.workbench.registerView({ id: 'a', title: 'A', location: 'left' })
+    ctx.workbench.registerView({ id: 'b', title: 'B', location: 'left' })
+    const group = groupForView(ctx.workbench.docking, 'a')!
+    ctx.workbench.activatePanel(group.id, 'b')
+    const floatingId = ctx.workbench.floatPanel(group.id, {
+      x: 10,
+      y: 20,
+      width: 300,
+      height: 400,
+    })!
+    const payload = ctx.workbench.detachPanelPayload(floatingId)
+    expect(payload?.title).toBe('B')
+    expect(payload?.node.type).toBe('group')
+    expect(payload?.node.type === 'group' && payload.node.views).toEqual(['a', 'b'])
+    expect(payload?.width).toBe(300)
+    ctx.workbench.removeFloatingPanel(floatingId)
+    expect(ctx.workbench.docking.floating).toHaveLength(0)
+    expect(groupForView(ctx.workbench.docking, 'a')).toBeUndefined()
+    await ctx.kernel.dispose()
+  })
+
   it('applies workspaces and emits events', async () => {
     const { ctx } = await setup()
     let applied = ''

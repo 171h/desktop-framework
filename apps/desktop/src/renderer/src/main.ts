@@ -34,7 +34,7 @@ async function boot(): Promise<void> {
   }
 
   // 本地框架延迟到确定不走远程运行时后再加载，避免重复注册 nusys-ui Custom Elements。
-  const [{ createPlaygroundApp }, { DetachedEditorShell }] = await Promise.all([
+  const [{ createPlaygroundApp }, { DetachedEditorShell, DetachedPanelShell }] = await Promise.all([
     import('@df/playground'),
     import('@df/app'),
   ])
@@ -45,6 +45,19 @@ async function boot(): Promise<void> {
       title: 'Desktop Framework — Editor',
       shell: {
         component: DetachedEditorShell,
+      },
+      shellProps: {
+        context: windowContext,
+      },
+    })
+    return
+  }
+  if (windowContext?.kind === 'panel') {
+    await createPlaygroundApp({
+      el: '#app',
+      title: 'Desktop Framework — Panel',
+      shell: {
+        component: DetachedPanelShell,
       },
       shellProps: {
         context: windowContext,

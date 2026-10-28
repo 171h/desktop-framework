@@ -16,6 +16,7 @@ import '@df/ui/theme.css'
 export { default as AppShell } from './AppShell.vue'
 export * from './commands'
 export { default as DetachedEditorShell } from './DetachedEditorShell.vue'
+export { default as DetachedPanelShell } from './DetachedPanelShell.vue'
 export * from './preset'
 export * from './shell'
 export { defaultPreset }
