@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DockGroupNode } from '@df/core'
 import { useCordis } from '@df/vue'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { startDockDrag } from '../dock-drag'
 
 const props = defineProps<{ group: DockGroupNode }>()
@@ -63,6 +63,33 @@ function scrollTabs(event: WheelEvent): void {
     event.preventDefault()
   }
 }
+
+function activeTab(): HTMLElement | undefined {
+  return [
+    ...(tabsRoot.value?.querySelectorAll<HTMLElement>('vscode-tab-header') ?? []),
+  ].find(element => element.dataset.viewId === active.value?.id)
+}
+
+async function revealActive(): Promise<void> {
+  await nextTick()
+  activeTab()?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
+// 合并标签组或调整浮窗宽度后，活动标签可能位于滚动区域外，需自动滚入可视范围。
+watch(
+  () => [active.value?.id, views.value.length] as const,
+  () => void revealActive(),
+  { immediate: true },
+)
+
+let stripObserver: ResizeObserver | undefined
+onMounted(() => {
+  if (!tabsRoot.value)
+    return
+  stripObserver = new ResizeObserver(() => void revealActive())
+  stripObserver.observe(tabsRoot.value)
+})
+onBeforeUnmount(() => stripObserver?.disconnect())
 </script>
 
 <template>
