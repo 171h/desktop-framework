@@ -68,7 +68,7 @@ electron-builder 配置位于 `apps/desktop/electron-builder.yml`：
 
 | 项目 | 处理 |
 | --- | --- |
-| 自定义标题栏 | Windows/Linux `frame:false`；macOS `hiddenInset` 保留交通灯 |
+| 自定义标题栏 | `titleBarStyle: 'hidden'` + `titleBarOverlay`（Windows/Linux 原生控制）；macOS `hiddenInset` 保留原生交通灯 |
 | 菜单栏 | Windows/Linux 隐藏但保留快捷键；macOS 使用系统菜单 |
 | 文件路径 | 统一 `node:path`，协议 URL 使用 POSIX 风格 |
 | 字体 | 系统字体回退链，避免打包字体体积 |

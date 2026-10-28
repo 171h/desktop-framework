@@ -56,6 +56,26 @@ new BrowserWindow({
 - `backgroundThrottling: false`：窗口失焦时保持渲染节奏，适合长时间运行的专业工具。
 - 窗口位置/尺寸/最大化状态持久化，并进行显示器可见性校验。
 
+## 原生窗口控制
+
+框架不绘制最小化 / 最大化 / 关闭按钮。窗口统一使用：
+
+```ts
+titleBarStyle: 'hidden',
+titleBarOverlay: {
+  color: '#101215',
+  symbolColor: '#e7e9ec',
+  height: 38,
+}
+```
+
+- Windows/Linux：`titleBarOverlay` 暴露操作系统原生窗口控制按钮。
+- macOS：`hiddenInset` 保留原生交通灯，并调整垂直位置。
+- 自定义标题栏只负责应用菜单、Ribbon 上下文、文档标题和工作区切换。
+- 使用 `env(titlebar-area-x)` 与 `env(titlebar-area-width)` 给原生按钮预留安全区，兼容 RTL 和把按钮放在左侧的 Linux 窗口管理器。
+- 主题切换时通过 `setTitleBarOverlay` IPC 同步覆盖层颜色。
+- 应用图标同时用于原生窗口/任务栏图标与标题栏左侧标识，不在页面内重绘系统按钮。
+
 ## 自定义协议
 
 生产环境 **不使用 `file://`**。主进程注册两个 standard + secure 协议：

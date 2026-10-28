@@ -32,6 +32,7 @@ import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
 | 主进程服务分层 | Cordis 主进程插件：host/runtime/protocol/window/ipc/menu/session |
 | 自定义协议加载渲染进程 | `df-app://bundle`，CSP、MIME、路径校验 |
 | preload 最小暴露 | `window.desktopFramework`，来源校验 |
+| 原生窗口控制 | `titleBarStyle:'hidden'` + `titleBarOverlay`，不绘制最小化/最大化/关闭按钮 |
 | 窗口状态恢复 | `window-state.json` + 显示器可见性校验 |
 | 隐藏菜单栏保留快捷键 | 原生菜单 + `setMenuBarVisibility(false)` |
 | 首屏优化 | `show:false`、`ready-to-show`、`v8CacheOptions:'code'` |

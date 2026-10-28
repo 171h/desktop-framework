@@ -8,6 +8,7 @@ export const CHANNELS = {
   saveFile: 'df:save-file',
   windowControl: 'df:window-control',
   windowState: 'df:window-state',
+  titleBarOverlay: 'df:titlebar-overlay',
   versions: 'df:versions',
   openExternal: 'df:open-external',
   runtime: 'df:runtime',

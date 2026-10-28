@@ -130,6 +130,21 @@ export async function apply(ctx: Context): Promise<void> {
       : { maximized: false, fullscreen: false, focused: false }
   })
 
+  handle(CHANNELS.titleBarOverlay, async (event, options: { color?: string, symbolColor?: string, height?: number }) => {
+    if (process.platform === 'darwin') {
+      return
+    }
+    const window = BrowserWindow.fromWebContents(event.sender) ?? host.mainWindow
+    if (!window) {
+      return
+    }
+    window.setTitleBarOverlay({
+      color: sanitizeColor(options?.color, '#101215'),
+      symbolColor: sanitizeColor(options?.symbolColor, '#e7e9ec'),
+      height: Math.min(80, Math.max(20, Math.round(Number(options?.height) || 38))),
+    })
+  })
+
   handle(CHANNELS.versions, async () => ({
     electron: process.versions.electron,
     chrome: process.versions.chrome,
@@ -168,6 +183,15 @@ function sanitizeFilters(filters?: FileDialogFilter[]): Electron.FileFilter[] | 
         .filter(Boolean)
         .slice(0, 20),
     }))
+}
+
+function sanitizeColor(value: unknown, fallback: string): string {
+  if (typeof value !== 'string' || value.length > 40) {
+    return fallback
+  }
+  return /^(?:#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%]+\))$/i.test(value.trim())
+    ? value.trim()
+    : fallback
 }
 
 /** 统一日志包装，避免未使用错误变量。 */

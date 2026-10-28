@@ -1,10 +1,11 @@
 /** 主窗口插件：窗口创建、状态持久化、安全导航与首屏性能。 */
 import type { Context } from 'cordis'
 import type { BrowserWindowConstructorOptions } from 'electron'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { debounce, errorMessage } from '@desktop-framework/core'
 import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, nativeTheme, shell } from 'electron'
 import { loadWindowState, saveWindowState } from '../window-state'
 
 export const name = 'electron:window'
@@ -42,6 +43,9 @@ export async function apply(ctx: Context): Promise<void> {
       ],
     }
     const isMac = process.platform === 'darwin'
+    const iconPath = app.isPackaged
+      ? join(process.resourcesPath, 'icon.png')
+      : join(app.getAppPath(), 'build/icon.png')
     const window = new BrowserWindow({
       width: state.width,
       height: state.height,
@@ -54,19 +58,32 @@ export async function apply(ctx: Context): Promise<void> {
       backgroundColor: host.options.renderer.backgroundColor ?? '#141619',
       autoHideMenuBar: true,
       title: host.options.window?.title ?? host.options.renderer.title ?? host.options.productName ?? 'Desktop Framework',
+      icon: existsSync(iconPath)
+        ? iconPath
+        : undefined,
+      // 保留系统原生窗口控制：Windows/Linux 用 titleBarOverlay，macOS 用
+      // 原生交通灯；只隐藏默认标题栏并绘制自定义内容。
       ...(isMac
         ? {
             titleBarStyle: 'hiddenInset' as const,
             trafficLightPosition: { x: 14, y: 12 },
           }
         : {
-            frame: false,
+            titleBarStyle: 'hidden' as const,
+            titleBarOverlay: {
+              color: nativeTheme.shouldUseDarkColors ? '#101215' : '#f4f6f8',
+              symbolColor: nativeTheme.shouldUseDarkColors ? '#e7e9ec' : '#20242a',
+              height: 38,
+            },
           }),
       ...windowOptions,
       webPreferences,
     } as BrowserWindowConstructorOptions)
 
     host.mainWindow = window
+    if (isMac && existsSync(iconPath)) {
+      app.dock?.setIcon(iconPath)
+    }
     window.setMenuBarVisibility(false)
     window.webContents.setVisualZoomLevelLimits(1, 1)
 

@@ -12,6 +12,7 @@ import type {
   IDisposable,
   OpenedFile,
   SaveFileRequest,
+  TitleBarOverlayOptions,
   WindowControlAction,
   WindowState,
 } from '@desktop-framework/core'
@@ -104,6 +105,11 @@ export class PlatformService extends Service {
   /** 读取当前窗口状态。 */
   async getWindowState(): Promise<WindowState | undefined> {
     return this.bridge?.getWindowState()
+  }
+
+  /** 同步原生标题栏覆盖层颜色；浏览器环境为空操作。 */
+  async setTitleBarOverlay(options: TitleBarOverlayOptions): Promise<void> {
+    await this.bridge?.setTitleBarOverlay(options)
   }
 
   /** 订阅原生菜单命令。 */

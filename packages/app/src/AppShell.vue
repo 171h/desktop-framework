@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { WindowState } from '@desktop-framework/core'
 import AppMenu from '@desktop-framework/menu/AppMenu.vue'
 import QuickAccess from '@desktop-framework/menu/QuickAccess.vue'
 import NotificationStack from '@desktop-framework/notifications/NotificationStack.vue'
@@ -7,61 +6,43 @@ import RibbonBar from '@desktop-framework/ribbon/RibbonBar.vue'
 import StatusBar from '@desktop-framework/statusbar/StatusBar.vue'
 import { DfPromptDialog, DfSlot } from '@desktop-framework/ui'
 import { useCordis } from '@desktop-framework/vue'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, watch } from 'vue'
+import appIcon from './assets/icon.png'
 import CommandPalette from './components/CommandPalette.vue'
 import WorkspaceBody from './components/WorkspaceBody.vue'
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue'
 
 const ctx = useCordis()
-const windowState = ref<WindowState>({ maximized: false, fullscreen: false, focused: true })
-const disposers: (() => void)[] = []
-
 const isMac = computed(() => ctx.platform.platform === 'darwin')
-const showWindowControls = computed(() => ctx.platform.isElectron && !isMac.value)
 const layout = computed(() => ctx.workbench.layout)
 
-onMounted(async () => {
-  if (!ctx.platform.isElectron) {
-    return
-  }
-  const state = await ctx.platform.getWindowState()
-  if (state) {
-    windowState.value = state
-  }
-  disposers.push(ctx.platform.onWindowState((next) => {
-    windowState.value = next
-  }).dispose)
-})
-
-onBeforeUnmount(() => {
-  for (const dispose of disposers) {
-    dispose()
-  }
-})
-
-async function windowAction(action: 'minimize' | 'toggleMaximize' | 'close'): Promise<void> {
-  const state = await ctx.platform.windowControl(action)
-  if (state) {
-    windowState.value = state
-  }
-}
-
-function onTitlebarDoubleClick(event: MouseEvent): void {
-  const target = event.target as HTMLElement
-  if (target.closest('vscode-button, vscode-toolbar-button, input, vscode-textfield, .workspace-switcher')) {
-    return
-  }
-  void windowAction('toggleMaximize')
-}
+// Windows/Linux 的原生窗口控制按钮由 titleBarOverlay 绘制。主题变化时同步
+// 覆盖层颜色，避免浅色主题下出现一块深色标题栏。
+watch(
+  () => ctx.ui.resolvedTheme,
+  (theme) => {
+    if (!ctx.platform.isElectron || isMac.value) {
+      return
+    }
+    void ctx.platform.setTitleBarOverlay({
+      color: theme === 'dark'
+        ? '#101215'
+        : '#f4f6f8',
+      symbolColor: theme === 'dark'
+        ? '#e7e9ec'
+        : '#20242a',
+      height: 38,
+    })
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div class="df-app" :class="{ 'is-mac': isMac }">
-    <header class="df-titlebar df-app-region-drag" @dblclick="onTitlebarDoubleClick">
+    <header class="df-titlebar df-app-region-drag">
       <div class="df-titlebar__left">
-        <div class="df-brand" aria-hidden="true">
-          DF
-        </div>
+        <img class="df-brand" :src="appIcon" alt="Desktop Framework" draggable="false">
         <AppMenu />
         <span class="df-titlebar__divider" />
         <QuickAccess />
@@ -80,15 +61,6 @@ function onTitlebarDoubleClick(event: MouseEvent): void {
           label="命令面板"
           @click="ctx.ui.togglePalette(true)"
         />
-        <div v-if="showWindowControls" class="df-window-controls">
-          <vscode-toolbar-button icon="chrome-minimize" label="最小化" @click="windowAction('minimize')" />
-          <vscode-toolbar-button
-            :icon="windowState.maximized ? 'chrome-restore' : 'chrome-maximize'"
-            :label="windowState.maximized ? '还原' : '最大化'"
-            @click="windowAction('toggleMaximize')"
-          />
-          <vscode-toolbar-button icon="chrome-close" label="关闭" class="df-window-controls__close" @click="windowAction('close')" />
-        </div>
       </div>
     </header>
 
@@ -129,7 +101,10 @@ function onTitlebarDoubleClick(event: MouseEvent): void {
   gap: 10px;
   height: 38px;
   min-height: 38px;
-  padding: 0 6px 0 10px;
+  padding-top: 0;
+  padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw) + 6px);
+  padding-bottom: 0;
+  padding-left: calc(env(titlebar-area-x, 0px) + 10px);
   border-bottom: 1px solid var(--df-border);
   background: linear-gradient(180deg, var(--df-titlebar), color-mix(in srgb, var(--df-titlebar) 88%, var(--df-canvas)));
   user-select: none;
@@ -169,18 +144,13 @@ function onTitlebarDoubleClick(event: MouseEvent): void {
 }
 
 .df-brand {
-  display: grid;
-  place-items: center;
-  width: 27px;
-  height: 27px;
-  margin-right: 2px;
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
   border-radius: 4px;
-  background: var(--df-accent);
-  color: #17130b;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--df-accent) 30%, transparent);
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 
 .df-titlebar__divider {
@@ -214,21 +184,6 @@ function onTitlebarDoubleClick(event: MouseEvent): void {
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.08em;
-}
-
-.df-window-controls {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-  margin-left: 5px;
-  padding-left: 5px;
-  border-left: 1px solid var(--df-border);
-  -webkit-app-region: no-drag;
-}
-
-.df-window-controls__close:hover {
-  --vscode-toolbar-hoverBackground: #c42b1c;
-  color: #ffffff;
 }
 
 .df-workbench {

@@ -7,6 +7,10 @@ const configPath = process.env.DF_RUNTIME_CONFIG
     ? join(process.resourcesPath, 'desktop-framework.config.json')
     : resolve(app.getAppPath(), '../../playground/desktop-framework.config.json'))
 
+if (process.platform === 'win32') {
+  app.setAppUserModelId('dev.desktop-framework.playground')
+}
+
 bootstrapElectron({
   appId: 'dev.desktop-framework.playground',
   productName: 'Desktop Framework',

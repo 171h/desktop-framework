@@ -367,6 +367,16 @@ export interface SaveFileRequest {
 /** 窗口控制动作。 */
 export type WindowControlAction = 'minimize' | 'maximize' | 'unmaximize' | 'toggleMaximize' | 'close'
 
+/** 原生标题栏覆盖层样式。 */
+export interface TitleBarOverlayOptions {
+  /** 覆盖层背景色，支持十六进制、rgb(a)、hsl(a)。 */
+  color: string
+  /** 原生控制按钮符号颜色；Windows 支持。 */
+  symbolColor: string
+  /** 覆盖层高度（CSS px）。 */
+  height?: number
+}
+
 /** 框架运行时信息。 */
 export interface FrameworkRuntimeInfo {
   mode: RuntimeMode
@@ -396,6 +406,7 @@ export interface DesktopBridge {
   saveFile: (request: SaveFileRequest) => Promise<string | null>
   windowControl: (action: WindowControlAction) => Promise<WindowState>
   getWindowState: () => Promise<WindowState>
+  setTitleBarOverlay: (options: TitleBarOverlayOptions) => Promise<void>
   onWindowState: (listener: (state: WindowState) => void) => () => void
   onCommand: (listener: (command: string, args?: unknown[]) => void) => () => void
   openExternal: (url: string) => Promise<void>
