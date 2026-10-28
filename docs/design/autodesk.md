@@ -49,7 +49,7 @@ AutoDesk 的按钮、菜单、快捷键和命令行最终都落到命令。界�
 
 | AutoDesk 概念 | Desktop Framework |
 | --- | --- |
-| 应用菜单 | `@df/menu` 的 `AppMenu` |
+| 应用菜单 | `@df/menu` 的 `AppMenu`（标题栏左上角大图标入口） |
 | 快速访问工具栏 | 命令 `toolbar` 元数据 + `QuickAccess` |
 | Ribbon | 命令 `ribbon` 元数据 + `vscode-ribbon` |
 | 文档标签页 | `editor` 服务 + nusys-ui `vscode-tabs` |

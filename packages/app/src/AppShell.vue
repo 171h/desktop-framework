@@ -13,6 +13,7 @@ import CommandPalette from './components/CommandPalette.vue'
 import DockDropOverlay from './components/DockDropOverlay.vue'
 import FloatingDocks from './components/FloatingDocks.vue'
 import HiddenPanels from './components/HiddenPanels.vue'
+import UserMenu from './components/UserMenu.vue'
 import WorkspaceBody from './components/WorkspaceBody.vue'
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue'
 import { cancelDockDrag } from './dock-drag'
@@ -50,8 +51,7 @@ watch(
     <!-- 整条标题栏为原生拖拽区；内部交互控件统一标记 no-drag。 -->
     <header class="df-titlebar df-app-region-drag">
       <div class="df-titlebar__left">
-        <img class="df-brand" :src="appIcon" alt="Desktop Framework" draggable="false">
-        <AppMenu />
+        <AppMenu :icon="appIcon" />
         <span class="df-titlebar__divider" />
         <QuickAccess />
       </div>
@@ -81,6 +81,7 @@ watch(
           label="命令面板"
           @click="ctx.ui.togglePalette(true)"
         />
+        <UserMenu />
       </div>
     </header>
 
@@ -177,16 +178,6 @@ watch(
   flex: 1 1 auto;
   overflow: hidden;
   pointer-events: auto;
-}
-
-.df-brand {
-  width: 20px;
-  height: 20px;
-  margin-right: 4px;
-  border-radius: 4px;
-  object-fit: contain;
-  pointer-events: none;
-  -webkit-user-drag: none;
 }
 
 .df-titlebar__divider {

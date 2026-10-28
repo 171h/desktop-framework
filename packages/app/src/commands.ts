@@ -10,6 +10,7 @@ export const name = 'framework:app-commands'
 export const inject = [
   'commands',
   'workbench',
+  'editor',
   'ui',
   'notifications',
   'platform',
@@ -25,6 +26,25 @@ export function apply(ctx: Context): void {
     })
     return () => subscription.dispose()
   }, 'app:native-commands')
+  ctx.effect(() => {
+    const command = ctx.commands.register({
+      id: 'app.newWorkspace',
+      title: '新建工作区',
+      category: '应用',
+      icon: 'add',
+      description: '恢复默认工作区布局并打开欢迎页。',
+      menu: {
+        path: ['文件'],
+        order: -10,
+      },
+      run: () => {
+        ctx.workbench.applyWorkspace('modeling')
+        ctx.editor.openWelcome()
+        ctx.notifications.info('已新建工作区')
+      },
+    })
+    return () => command.dispose()
+  }, 'app:new-workspace')
   ctx.effect(() => {
     const command = ctx.commands.register({
       id: 'workbench.saveWorkspace',

@@ -131,6 +131,7 @@ export function createShellPlugin(config: ShellConfig) {
           'keybindings',
           'wasm',
           'kernel',
+          'account',
         ]),
       ]),
     ],

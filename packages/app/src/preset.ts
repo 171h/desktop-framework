@@ -25,6 +25,7 @@ import ui from '@df/ui'
 import pinia from '@df/vue'
 import wasm from '@df/wasm'
 import workbench from '@df/workbench'
+import account from './account'
 import appCommands from './commands'
 import windowSync from './window-sync'
 
@@ -129,6 +130,12 @@ export function createDefaultPreset(options: PresetOptions = {}): PluginEntry[] 
       name: '跨窗口状态同步',
       version: '0.1.0',
       description: '在独立窗口之间同步选择状态',
+    }),
+    pluginEntry(account, undefined, {
+      id: 'framework:account',
+      name: '本地账户',
+      version: '0.1.0',
+      description: '本地登录状态、头像与账户菜单',
     }),
     pluginEntry(explorer, undefined, {
       id: 'framework:explorer',

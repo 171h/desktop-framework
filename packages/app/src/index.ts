@@ -14,6 +14,8 @@ import { createShellPlugin } from './shell'
 import '@df/ui/theme.css'
 
 export { default as AppShell } from './AppShell.vue'
+export { AccountService } from './account'
+export type { AccountUser, LoginInput } from './account'
 export * from './commands'
 export { default as DetachedEditorShell } from './DetachedEditorShell.vue'
 export { default as DetachedPanelShell } from './DetachedPanelShell.vue'
