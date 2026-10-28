@@ -3,7 +3,7 @@
  *
  * 渲染进程没有 Node、没有 `ipcRenderer`，只能调用这里列出的方法。
  */
-import type { DesktopBridge, FileDialogFilter, FrameworkRuntimeInfo, OpenedFile, SaveFileRequest, TitleBarOverlayOptions, WindowControlAction, WindowState } from '@df/core'
+import type { DesktopBridge, DetachedWindowRequest, FileDialogFilter, FrameworkRuntimeInfo, OpenedFile, SaveFileRequest, TitleBarOverlayOptions, WindowContext, WindowControlAction, WindowMessage, WindowState } from '@df/core'
 import { contextBridge, ipcRenderer } from 'electron'
 import { CHANNELS } from '../shared'
 
@@ -67,6 +67,20 @@ export function exposeDesktopBridge(): void {
     },
     async getRuntime(): Promise<FrameworkRuntimeInfo | null> {
       return ipcRenderer.invoke(CHANNELS.runtime) as Promise<FrameworkRuntimeInfo | null>
+    },
+    async openDetachedWindow(request: DetachedWindowRequest): Promise<boolean> {
+      return ipcRenderer.invoke(CHANNELS.openDetachedWindow, request) as Promise<boolean>
+    },
+    async getWindowContext(): Promise<WindowContext | null> {
+      return ipcRenderer.invoke(CHANNELS.windowContext) as Promise<WindowContext | null>
+    },
+    sendWindowMessage(topic: string, payload: unknown): void {
+      ipcRenderer.send(CHANNELS.windowMessage, { topic, payload })
+    },
+    onWindowMessage(listener: (message: WindowMessage) => void): () => void {
+      const handler = (_event: Electron.IpcRendererEvent, message: WindowMessage): void => listener(message)
+      ipcRenderer.on(CHANNELS.windowMessage, handler)
+      return () => ipcRenderer.removeListener(CHANNELS.windowMessage, handler)
     },
   }
 

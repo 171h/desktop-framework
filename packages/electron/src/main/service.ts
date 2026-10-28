@@ -5,7 +5,7 @@ import type { ResolvedRuntime } from '@df/bootstrap/node'
  * 所有 Electron 插件通过 Cordis 依赖注入读取同一个 Host 服务，避免模块级
  * 可变单例；窗口、运行时与就绪状态都集中在这里，卸载时按依赖逆序释放。
  */
-import type { FrameworkRuntimeInfo, WindowState } from '@df/core'
+import type { FrameworkRuntimeInfo, WindowContext, WindowMessage, WindowState } from '@df/core'
 import type { Context } from 'cordis'
 import type { BrowserWindow } from 'electron'
 import type { ElectronHostOptions } from '../shared'
@@ -13,6 +13,7 @@ import { shortCommit } from '@df/bootstrap'
 import { createDeferred } from '@df/core'
 import { StartupTimer } from '@df/vscode'
 import { Service } from 'cordis'
+import { BrowserWindow as ElectronBrowserWindow } from 'electron'
 
 declare module 'cordis' {
   interface Context {
@@ -28,6 +29,10 @@ export class ElectronHostService extends Service {
   mainWindow?: BrowserWindow
   runtime?: ResolvedRuntime
   runtimeInfo?: FrameworkRuntimeInfo
+  /** 由窗口插件注入：创建编辑器或面板独立窗口。 */
+  createDetachedWindow?: (request: unknown) => Promise<boolean>
+  private readonly windows = new Map<number, BrowserWindow>()
+  private readonly contexts = new Map<number, WindowContext>()
 
   constructor(ctx: Context, options: ElectronHostOptions) {
     super(ctx, 'electronHost')
@@ -102,10 +107,60 @@ export class ElectronHostService extends Service {
 
   /** 发送原生菜单命令。 */
   sendCommand(command: string, args?: unknown[]): void {
-    const target = this.mainWindow?.isFocused()
-      ? this.mainWindow
-      : undefined
+    const focused = ElectronBrowserWindow.getFocusedWindow()
+    const target = focused && this.windows.has(focused.webContents.id)
+      ? focused
+      : this.mainWindow
     target?.webContents.send('df:command', command, args)
+  }
+
+  /** 登记框架创建的窗口。 */
+  registerWindow(window: BrowserWindow, context?: WindowContext): void {
+    this.windows.set(window.webContents.id, window)
+    if (context) {
+      this.contexts.set(window.webContents.id, context)
+    }
+    window.once('closed', () => {
+      this.windows.delete(window.webContents.id)
+      this.contexts.delete(window.webContents.id)
+    })
+  }
+
+  /** 窗口是否是本框架创建并受信任的。 */
+  isTrustedWindow(window: Electron.WebContents): boolean {
+    return this.windows.has(window.id)
+  }
+
+  /** 读取窗口的启动上下文。 */
+  contextFor(window: Electron.WebContents): WindowContext | null {
+    return this.contexts.get(window.id) ?? null
+  }
+
+  /** 向除了发送方之外的所有框架窗口广播消息。 */
+  broadcastWindowMessage(source: Electron.WebContents, topic: string, payload: unknown): void {
+    if (!topic || typeof topic !== 'string') {
+      return
+    }
+    const message: WindowMessage = {
+      source: source.id,
+      topic,
+      payload,
+    }
+    for (const [id, window] of this.windows) {
+      if (id === source.id || window.isDestroyed() || window.webContents.isDestroyed()) {
+        continue
+      }
+      window.webContents.send('df:window-message', message)
+    }
+  }
+
+  /** 关闭并移除所有辅助窗口。 */
+  closeDetachedWindows(): void {
+    for (const window of this.windows.values()) {
+      if (window !== this.mainWindow && !window.isDestroyed()) {
+        window.destroy()
+      }
+    }
   }
 }
 

@@ -11,6 +11,7 @@
     "dist": "electron-vite build && electron-builder"
   },
   "dependencies": {
+    "@df/app": "workspace:*",
     "@df/bootstrap": "workspace:*",
     "@df/core": "workspace:*",
     "@df/electron": "workspace:*",

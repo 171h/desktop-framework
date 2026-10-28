@@ -385,6 +385,46 @@ export interface WindowState {
   focused: boolean
 }
 
+/** 独立窗口类型。 */
+export type DetachedWindowKind = 'editor' | 'panel'
+
+/** 创建独立窗口的请求。 */
+export interface DetachedWindowRequest {
+  kind: DetachedWindowKind
+  /** 窗口标题；实际标题仍由渲染进程决定。 */
+  title?: string
+  /** 可结构化克隆的窗口恢复数据。 */
+  payload: unknown
+  /** 屏幕坐标；缺省时由主进程选择位置。 */
+  bounds?: {
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+  }
+}
+
+/** 独立窗口启动上下文。 */
+export interface WindowContext {
+  kind: DetachedWindowKind
+  payload: unknown
+}
+
+/** 跨窗口消息；source 为主进程分配的发送方 webContents id。 */
+export interface WindowMessage {
+  source: number
+  topic: string
+  payload: unknown
+}
+
+/** 拖出到独立面板窗口时传递的停靠节点。 */
+export interface DetachedPanelPayload {
+  title: string
+  node: DockNode
+  width: number
+  height: number
+}
+
 /** 文件选择过滤器。 */
 export interface FileDialogFilter {
   name: string
@@ -465,6 +505,14 @@ export interface DesktopBridge {
   onCommand: (listener: (command: string, args?: unknown[]) => void) => () => void
   openExternal: (url: string) => Promise<void>
   getRuntime: () => Promise<FrameworkRuntimeInfo | null>
+  /** 创建编辑器或面板独立窗口；浏览器宿主返回 false。 */
+  openDetachedWindow?: (request: DetachedWindowRequest) => Promise<boolean>
+  /** 读取当前窗口的启动上下文；主窗口返回 null。 */
+  getWindowContext?: () => Promise<WindowContext | null>
+  /** 向其他框架窗口广播消息。 */
+  sendWindowMessage?: (topic: string, payload: unknown) => void
+  /** 订阅其他框架窗口的消息。 */
+  onWindowMessage?: (listener: (message: WindowMessage) => void) => () => void
 }
 
 /** 框架运行时模式。 */

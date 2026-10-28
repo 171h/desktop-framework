@@ -15,6 +15,7 @@ import '@df/ui/theme.css'
 
 export { default as AppShell } from './AppShell.vue'
 export * from './commands'
+export { default as DetachedEditorShell } from './DetachedEditorShell.vue'
 export * from './preset'
 export * from './shell'
 export { defaultPreset }
@@ -30,6 +31,8 @@ export interface CreateFrameworkAppOptions extends PresetOptions {
   plugins?: PluginEntry[]
   /** 自定义 Vue 外壳及其服务依赖。 */
   shell?: Pick<ShellConfig, 'component' | 'inject'>
+  /** 自定义外壳的根组件属性。 */
+  shellProps?: Record<string, unknown>
 }
 
 export interface FrameworkApp {
@@ -60,6 +63,7 @@ export async function createFrameworkApp(options: CreateFrameworkAppOptions): Pr
         ...options.shell,
         el: options.el,
         title: options.title ?? 'Desktop Framework',
+        props: options.shellProps,
         startup,
       }),
       undefined,

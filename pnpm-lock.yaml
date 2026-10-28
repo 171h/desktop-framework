@@ -241,6 +241,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@df/app':
+        specifier: workspace:*
+        version: link:../../packages/app
       '@df/bootstrap':
         specifier: workspace:*
         version: link:../../packages/bootstrap
@@ -481,6 +484,9 @@ importers:
       '@df/keybindings':
         specifier: workspace:*
         version: link:../keybindings
+      '@df/platform':
+        specifier: workspace:*
+        version: link:../platform
       '@df/vue':
         specifier: workspace:*
         version: link:../vue

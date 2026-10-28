@@ -28,9 +28,11 @@ ctx.effect(() => {
 | `title` / `icon` | 标签标题与 Codicon |
 | `component` | 主工作区渲染的 Vue 组件 |
 | `dirty` | 未保存标记；可通过 `setDirty` 更新 |
-| `pinned` | 固定标签页；始终位于非固定标签页左侧 |
-| `preview` | 预览标签页；标题使用斜体 |
+| `pinned` | 固定标签页；始终位于非固定标签页左侧，滚动时保持可见 |
+| `preview` | 预览标签页；同一时间只保留一个，标题使用斜体 |
 | `closable` | `false` 时用户无法关闭；插件卸载仍会强制释放 |
+| `detachKey` | 拖出到独立窗口时使用的恢复键 |
+| `getDetachState` | 返回可结构化克隆的文档状态，供独立窗口恢复 |
 
 `open()` 返回 `IDisposable`，适合在 `ctx.effect` 中注册文档。
 
@@ -52,6 +54,31 @@ ctx.effect(() => {
 - 切换标签页时通过 `KeepAlive` 保留文档组件状态。
 
 打开文档时可通过 `preview: true` 打开预览标签，通过 `pinned: true` 打开固定标签。`open()` 返回 `IDisposable`，适合在 `ctx.effect` 中注册文档。
+
+## 独立窗口
+
+Electron 桌面宿主支持将文档标签拖出主窗口，或通过标签右键菜单的 **移动到新窗口** 创建独立编辑器窗口。独立窗口使用精简外壳，只保留当前文档和标签栏。
+
+文档通过 `detachKey` 与恢复处理器跨窗口重建。未注册处理器的文档会显示一个独立窗口占位页；需要保留状态的插件应注册处理器，并通过 `getDetachState()` 返回可结构化克隆的数据：
+
+```ts
+ctx.effect(() => {
+  const registration = ctx.editor.open({
+    id: 'acme.document',
+    title: '业务文档',
+    component: markRaw(AcmeDocument),
+    detachKey: 'acme.document',
+    getDetachState: () => documentState.snapshot(),
+  })
+  return () => registration.dispose()
+}, 'acme:editor')
+
+ctx.effect(() => ctx.editor.registerDetachHandler('acme.document', (state) => {
+  documentState.restore(state)
+}).dispose, 'acme:detach')
+```
+
+浏览器宿主不支持独立窗口，拖出标签不会移除原标签。
 
 主工作区优先渲染当前活动文档；没有文档时回退到 `workbench.registerView({ location: 'main' })` 提供的主视图。标签栏本身不占用编辑内容区域。
 

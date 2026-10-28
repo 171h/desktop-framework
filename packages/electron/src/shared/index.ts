@@ -15,6 +15,9 @@ export const CHANNELS = {
   openExternal: 'df:open-external',
   runtime: 'df:runtime',
   command: 'df:command',
+  openDetachedWindow: 'df:open-detached-window',
+  windowContext: 'df:window-context',
+  windowMessage: 'df:window-message',
 } as const
 
 export interface RendererOptions {

@@ -22,7 +22,7 @@ export async function apply(ctx: Context): Promise<void> {
   ctx.effect(() => () => disposables.dispose(), 'electron:ipc')
 
   const trusted = (event: Electron.IpcMainInvokeEvent): boolean => {
-    return event.sender === host.mainWindow?.webContents
+    return host.isTrustedWindow(event.sender)
       && event.senderFrame === event.sender.mainFrame
       && isAllowedNavigation(event.senderFrame?.url ?? '', host.options.renderer.devUrl)
   }
@@ -37,8 +37,8 @@ export async function apply(ctx: Context): Promise<void> {
     disposables.add(toDisposable(() => ipcMain.removeHandler(channel)))
   }
 
-  handle(CHANNELS.openFiles, async (_event, options?: { title?: string, filters?: FileDialogFilter[], multiple?: boolean }) => {
-    const parent = host.mainWindow
+  handle(CHANNELS.openFiles, async (event, options?: { title?: string, filters?: FileDialogFilter[], multiple?: boolean }) => {
+    const parent = BrowserWindow.fromWebContents(event.sender) ?? host.mainWindow
     if (!parent) {
       return []
     }
@@ -68,8 +68,8 @@ export async function apply(ctx: Context): Promise<void> {
     return files
   })
 
-  handle(CHANNELS.saveFile, async (_event, request: SaveFileRequest) => {
-    const parent = host.mainWindow
+  handle(CHANNELS.saveFile, async (event, request: SaveFileRequest) => {
+    const parent = BrowserWindow.fromWebContents(event.sender) ?? host.mainWindow
     if (!parent || !(request?.data instanceof Uint8Array)) {
       return null
     }
@@ -164,6 +164,33 @@ export async function apply(ctx: Context): Promise<void> {
   })
 
   handle(CHANNELS.runtime, async () => host.runtimeInfo ?? null)
+
+  handle(CHANNELS.openDetachedWindow, async (_event, request: unknown) => {
+    if (!host.createDetachedWindow) {
+      return false
+    }
+    return host.createDetachedWindow(request)
+  })
+
+  handle(CHANNELS.windowContext, async event => host.contextFor(event.sender))
+
+  const onWindowMessage = (event: Electron.IpcMainEvent, message?: { topic?: unknown, payload?: unknown }): void => {
+    if (event.sender !== host.mainWindow?.webContents && !host.isTrustedWindow(event.sender)) {
+      return
+    }
+    if (event.senderFrame !== event.sender.mainFrame) {
+      return
+    }
+    if (!isAllowedNavigation(event.senderFrame?.url ?? '', host.options.renderer.devUrl)) {
+      return
+    }
+    if (!message || typeof message.topic !== 'string' || !message.topic || message.topic.length > 120) {
+      return
+    }
+    host.broadcastWindowMessage(event.sender, message.topic, message.payload)
+  }
+  ipcMain.on(CHANNELS.windowMessage, onWindowMessage)
+  disposables.add(toDisposable(() => ipcMain.removeListener(CHANNELS.windowMessage, onWindowMessage)))
 
   handle(CHANNELS.developerAction, (event, action: unknown) => executeDeveloperAction(
     event.sender,

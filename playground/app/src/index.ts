@@ -5,6 +5,7 @@
  * 命令与 Ribbon 条目，然后调用框架的 `createFrameworkApp`。
  */
 import type { PluginEntry } from '@df/core'
+import type { Component } from 'vue'
 import { createDefaultPreset, createFrameworkApp } from '@df/app'
 import { pluginEntry } from '@df/kernel'
 import labPlugin from './plugin'
@@ -13,6 +14,10 @@ export interface CreatePlaygroundOptions {
   el: string | HTMLElement
   title?: string
   plugins?: PluginEntry[]
+  /** 自定义外壳；独立窗口使用精简外壳。 */
+  shell?: { component: Component, inject?: string[] }
+  /** 自定义外壳的根组件属性。 */
+  shellProps?: Record<string, unknown>
 }
 
 export async function createPlaygroundApp(options: CreatePlaygroundOptions) {
@@ -30,6 +35,8 @@ export async function createPlaygroundApp(options: CreatePlaygroundOptions) {
     title: options.title ?? 'Desktop Framework',
     preset: createDefaultPreset(),
     plugins: entries,
+    shell: options.shell,
+    shellProps: options.shellProps,
   })
 }
 

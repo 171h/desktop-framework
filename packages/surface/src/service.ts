@@ -44,6 +44,13 @@ export interface SurfaceCamera {
   zoom: number
 }
 
+/** 独立窗口之间传递的画布状态。 */
+export interface SurfaceDetachState {
+  nodes: SurfaceNode[]
+  connections: SurfaceConnection[]
+  camera: SurfaceCamera
+}
+
 export interface SurfaceViewport {
   width: number
   height: number
@@ -193,9 +200,14 @@ export class SurfaceService extends Service {
         component: markRaw(SurfaceView),
         closable: false,
         pinned: true,
+        detachKey: 'surface',
+        getDetachState: () => this.detachState(),
       })
       return () => registration.dispose()
     }, 'surface:document')
+    ctx.effect(() => ctx.editor.registerDetachHandler('surface', (state) => {
+      this.restoreDetachState(state)
+    }).dispose, 'surface:detach')
     ctx.effect(() => ctx.statusbar.register({
       id: 'surface.zoom',
       alignment: 'right',
@@ -380,6 +392,46 @@ export class SurfaceService extends Service {
     return this.nodesRef.value.length !== before
   }
 
+  /** 导出独立窗口所需的画布状态。 */
+  detachState(): SurfaceDetachState {
+    // ref 中的对象是 Vue 响应式代理，structuredClone 无法克隆 Proxy。
+    return JSON.parse(JSON.stringify({
+      nodes: this.nodesRef.value,
+      connections: this.connections.value,
+      camera: this.cameraRef.value,
+    })) as SurfaceDetachState
+  }
+
+  /** 恢复从另一个窗口传入的画布状态。 */
+  restoreDetachState(value: unknown): void {
+    if (!value || typeof value !== 'object') {
+      return
+    }
+    const state = value as Partial<SurfaceDetachState>
+    if (Array.isArray(state.nodes)) {
+      const nodes = state.nodes.filter(isSurfaceNode).map(node => ({
+        ...node,
+        meta: node.meta
+          ? { ...node.meta }
+          : undefined,
+      }))
+      if (nodes.length) {
+        this.nodesRef.value = nodes
+        const ids = new Set(nodes.map(node => node.id))
+        this.connections.value = Array.isArray(state.connections)
+          ? state.connections.filter(link => isSurfaceConnection(link) && ids.has(link.from) && ids.has(link.to))
+          : []
+      }
+    }
+    if (isSurfaceCamera(state.camera)) {
+      this.cameraRef.value = {
+        x: state.camera.x,
+        y: state.camera.y,
+        zoom: clamp(state.camera.zoom, 0.1, 8),
+      }
+    }
+  }
+
   private registerCommands(): void {
     const commands = [
       {
@@ -501,6 +553,34 @@ export class SurfaceService extends Service {
       }, `surface:${command.id}`)
     }
   }
+}
+
+function isSurfaceNode(value: unknown): value is SurfaceNode {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const node = value as Partial<SurfaceNode>
+  return typeof node.id === 'string'
+    && typeof node.title === 'string'
+    && typeof node.category === 'string'
+    && typeof node.tone === 'string'
+    && ['x', 'y', 'width', 'height'].every(key => Number.isFinite(node[key as 'x']))
+}
+
+function isSurfaceConnection(value: unknown): value is SurfaceConnection {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const link = value as Partial<SurfaceConnection>
+  return typeof link.from === 'string' && typeof link.to === 'string'
+}
+
+function isSurfaceCamera(value: unknown): value is SurfaceCamera {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const camera = value as Partial<SurfaceCamera>
+  return Number.isFinite(camera.x) && Number.isFinite(camera.y) && Number.isFinite(camera.zoom)
 }
 
 export const name = 'framework:surface'

@@ -1,16 +1,24 @@
-/** 主窗口插件：窗口创建、状态持久化、安全导航与首屏性能。 */
+import type { DetachedWindowRequest, WindowContext } from '@df/core'
+/** 窗口插件：主窗口、独立编辑器/面板窗口、状态持久化与安全导航。 */
 import type { Context } from 'cordis'
-import type { BrowserWindowConstructorOptions } from 'electron'
+import type { BrowserWindowConstructorOptions, Rectangle } from 'electron'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { debounce, errorMessage } from '@df/core'
 import { DisposableStore, toDisposable } from '@df/vscode'
-import { app, BrowserWindow, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, nativeTheme, screen, shell } from 'electron'
 import { isAllowedNavigation } from '../navigation'
 import { loadWindowState, saveWindowState } from '../window-state'
 
 export const name = 'electron:window'
 export const inject = ['electronHost']
+
+interface CreateWindowOptions {
+  title?: string
+  bounds?: Partial<Rectangle>
+  context?: WindowContext
+  main?: boolean
+}
 
 export async function apply(ctx: Context): Promise<void> {
   const host = ctx.electronHost
@@ -21,12 +29,8 @@ export async function apply(ctx: Context): Promise<void> {
   const statePath = join(app.getPath('userData'), 'window-state.json')
   const state = await loadWindowState(statePath)
 
-  const createWindow = async (): Promise<void> => {
-    if (host.mainWindow && !host.mainWindow.isDestroyed()) {
-      host.mainWindow.focus()
-      return
-    }
-    const windowOptions = host.options.window ?? {}
+  const createWindow = async (options: CreateWindowOptions): Promise<BrowserWindow> => {
+    const isMac = process.platform === 'darwin'
     const webPreferences: Electron.WebPreferences = {
       preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
@@ -37,28 +41,37 @@ export async function apply(ctx: Context): Promise<void> {
       spellcheck: false,
       backgroundThrottling: true,
       v8CacheOptions: 'code',
-      ...windowOptions.webPreferences,
+      ...host.options.window?.webPreferences,
       additionalArguments: [
         `--df-app-version=${app.getVersion()}`,
-        ...(windowOptions.webPreferences?.additionalArguments ?? []),
+        ...(host.options.window?.webPreferences?.additionalArguments ?? []),
       ],
     }
-    const isMac = process.platform === 'darwin'
     const iconPath = app.isPackaged
       ? join(process.resourcesPath, 'icon.png')
       : join(app.getAppPath(), 'build/icon.png')
+    const main = options.main === true
+    const bounds = main
+      ? {
+          width: state.width,
+          height: state.height,
+          x: state.x,
+          y: state.y,
+        }
+      : sanitizeBounds(options.bounds, options.context?.kind === 'panel'
+          ? 420
+          : 900, options.context?.kind === 'panel'
+          ? 360
+          : 640)
     const window = new BrowserWindow({
-      width: state.width,
-      height: state.height,
-      x: state.x,
-      y: state.y,
-      minWidth: 980,
-      minHeight: 640,
+      ...bounds,
+      minWidth: main ? 980 : 420,
+      minHeight: main ? 640 : 320,
       show: false,
       paintWhenInitiallyHidden: true,
       backgroundColor: host.options.renderer.backgroundColor ?? '#141619',
       autoHideMenuBar: true,
-      title: host.options.window?.title ?? host.options.renderer.title ?? host.options.productName ?? 'Desktop Framework',
+      title: options.title ?? host.options.window?.title ?? host.options.renderer.title ?? host.options.productName ?? 'Desktop Framework',
       icon: existsSync(iconPath)
         ? iconPath
         : undefined,
@@ -77,20 +90,25 @@ export async function apply(ctx: Context): Promise<void> {
               height: 38,
             },
           }),
-      ...windowOptions,
+      ...(main
+        ? host.options.window
+        : {}),
       webPreferences,
     } as BrowserWindowConstructorOptions)
 
-    host.mainWindow = window
-    if (isMac && existsSync(iconPath)) {
-      app.dock?.setIcon(iconPath)
+    if (main) {
+      host.mainWindow = window
+      if (isMac && existsSync(iconPath)) {
+        app.dock?.setIcon(iconPath)
+      }
     }
+    host.registerWindow(window, options.context)
     window.setMenuBarVisibility(false)
     window.webContents.setVisualZoomLevelLimits(1, 1)
 
     let rendererReady = false
     const sendState = (): void => {
-      if (!rendererReady || window.isDestroyed()) {
+      if (!main || !rendererReady || window.isDestroyed()) {
         return
       }
       host.broadcastWindowState({
@@ -100,17 +118,19 @@ export async function apply(ctx: Context): Promise<void> {
       })
     }
     const persist = debounce(() => {
-      if (window.isDestroyed()) {
+      if (!main || window.isDestroyed()) {
         return
       }
       void saveWindowState(statePath, window).catch(error => ctx.logger.warn(`[electron] 保存窗口状态失败：${errorMessage(error)}`))
     }, 250)
 
-    disposables.add(toDisposable(() => {
-      if (!window.isDestroyed()) {
-        window.destroy()
-      }
-    }))
+    if (main) {
+      disposables.add(toDisposable(() => {
+        if (!window.isDestroyed()) {
+          window.destroy()
+        }
+      }))
+    }
     window.on('resize', () => {
       sendState()
       persist()
@@ -123,7 +143,9 @@ export async function apply(ctx: Context): Promise<void> {
     window.on('focus', sendState)
     window.on('blur', sendState)
     window.on('close', () => {
-      void saveWindowState(statePath, window)
+      if (main) {
+        void saveWindowState(statePath, window)
+      }
     })
     window.on('closed', () => {
       if (host.mainWindow === window) {
@@ -132,19 +154,21 @@ export async function apply(ctx: Context): Promise<void> {
     })
 
     window.once('ready-to-show', () => {
-      if (state.maximized) {
+      if (main && state.maximized) {
         window.maximize()
       }
       window.show()
-      host.startup.mark('window-shown')
-      ctx.logger.info(`[electron] 窗口显示 ${Math.round(host.startup.report().totalMs)}ms`)
+      if (main) {
+        host.startup.mark('window-shown')
+        ctx.logger.info(`[electron] 窗口显示 ${Math.round(host.startup.report().totalMs)}ms`)
+      }
     })
 
     window.webContents.on('did-finish-load', () => {
       rendererReady = true
-      // 初始窗口状态由渲染进程主动 invoke 获取；这里不再首帧 push，避免
-      // Electron 在极早期销毁临时 frame 时产生无意义的 IPC 拒绝。
-      host.startup.mark('renderer-loaded')
+      if (main) {
+        host.startup.mark('renderer-loaded')
+      }
     })
     window.webContents.on('did-fail-load', (_event, code, description, url) => {
       ctx.logger.error(`[electron] 页面加载失败 ${code} ${description} ${url}`)
@@ -189,10 +213,45 @@ export async function apply(ctx: Context): Promise<void> {
     catch (error) {
       ctx.logger.error(`[electron] 渲染页面加载失败：${errorMessage(error)}`)
     }
+    return window
+  }
+
+  const createMainWindow = async (): Promise<void> => {
+    if (host.mainWindow && !host.mainWindow.isDestroyed()) {
+      host.mainWindow.focus()
+      return
+    }
+    await createWindow({ main: true })
+  }
+
+  host.createDetachedWindow = async (request: unknown): Promise<boolean> => {
+    if (!isDetachedWindowRequest(request)) {
+      return false
+    }
+    const payloadSize = safeJsonSize(request.payload)
+    if (payloadSize > 2 * 1024 * 1024) {
+      ctx.logger.warn('[electron] 拒绝创建独立窗口：恢复数据超过 2MB')
+      return false
+    }
+    try {
+      await createWindow({
+        title: request.title,
+        bounds: request.bounds,
+        context: {
+          kind: request.kind,
+          payload: request.payload,
+        },
+      })
+      return true
+    }
+    catch (error) {
+      ctx.logger.error(`[electron] 创建独立窗口失败：${errorMessage(error)}`)
+      return false
+    }
   }
 
   try {
-    await createWindow()
+    await createMainWindow()
   }
   catch (error) {
     ctx.logger.error(`[electron] 主窗口创建失败：${errorMessage(error)}`)
@@ -200,7 +259,7 @@ export async function apply(ctx: Context): Promise<void> {
 
   const onActivate = (): void => {
     if (!host.mainWindow) {
-      void createWindow().catch(error => ctx.logger.error(`[electron] 重新创建窗口失败：${errorMessage(error)}`))
+      void createMainWindow().catch(error => ctx.logger.error(`[electron] 重新创建窗口失败：${errorMessage(error)}`))
     }
     else {
       host.mainWindow.focus()
@@ -208,4 +267,64 @@ export async function apply(ctx: Context): Promise<void> {
   }
   app.on('activate', onActivate)
   disposables.add(toDisposable(() => app.off('activate', onActivate)))
+  disposables.add(toDisposable(() => host.closeDetachedWindows()))
+}
+
+function isDetachedWindowRequest(value: unknown): value is DetachedWindowRequest {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const request = value as Partial<DetachedWindowRequest>
+  if (request.kind !== 'editor' && request.kind !== 'panel') {
+    return false
+  }
+  if (request.title !== undefined && (typeof request.title !== 'string' || request.title.length > 200)) {
+    return false
+  }
+  if (request.bounds && typeof request.bounds === 'object') {
+    for (const key of ['x', 'y', 'width', 'height'] as const) {
+      const item = request.bounds[key]
+      if (item !== undefined && (typeof item !== 'number' || !Number.isFinite(item))) {
+        return false
+      }
+    }
+  }
+  return true
+}
+
+function sanitizeBounds(bounds: Partial<Rectangle> | undefined, fallbackWidth: number, fallbackHeight: number): Rectangle {
+  const width = clampDimension(bounds?.width, fallbackWidth, 320, 2400)
+  const height = clampDimension(bounds?.height, fallbackHeight, 240, 1600)
+  const workArea = screen.getDisplayMatching({
+    x: Number.isFinite(bounds?.x)
+      ? bounds!.x!
+      : 0,
+    y: Number.isFinite(bounds?.y)
+      ? bounds!.y!
+      : 0,
+    width,
+    height,
+  }).workArea
+  const x = Number.isFinite(bounds?.x)
+    ? Math.round(Math.min(Math.max(bounds!.x!, workArea.x), workArea.x + workArea.width - width))
+    : Math.round(workArea.x + (workArea.width - width) / 2)
+  const y = Number.isFinite(bounds?.y)
+    ? Math.round(Math.min(Math.max(bounds!.y!, workArea.y), workArea.y + workArea.height - height))
+    : Math.round(workArea.y + (workArea.height - height) / 2)
+  return { x, y, width, height }
+}
+
+function clampDimension(value: unknown, fallback: number, min: number, max: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, Math.round(value)))
+    : fallback
+}
+
+function safeJsonSize(value: unknown): number {
+  try {
+    return JSON.stringify(value)?.length ?? 0
+  }
+  catch {
+    return Number.POSITIVE_INFINITY
+  }
 }

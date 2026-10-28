@@ -17,6 +17,7 @@
     "@df/commands": "workspace:*",
     "@df/core": "workspace:*",
     "@df/keybindings": "workspace:*",
+    "@df/platform": "workspace:*",
     "@df/vue": "workspace:*",
     "cordis": "^4.0.0-rc.12",
     "nusys-ui": "^4.2.1",

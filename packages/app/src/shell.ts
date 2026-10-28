@@ -25,6 +25,8 @@ export interface ShellConfig {
   startup?: StartupTimer
   /** 替换工作台外壳，便于宿主提供精简或专用界面。 */
   component?: Component
+  /** 传递给自定义外壳的根组件属性。 */
+  props?: Record<string, unknown>
   /** 自定义外壳所需服务；Pinia 与内核始终保留。 */
   inject?: string[]
 }
@@ -35,6 +37,7 @@ export class ShellService extends Service {
   private readonly mountTarget: string | HTMLElement
   private readonly startup?: StartupTimer
   private readonly component: Component
+  private readonly props: Record<string, unknown>
 
   constructor(ctx: Context, config: ShellConfig) {
     super(ctx, 'shell')
@@ -42,6 +45,7 @@ export class ShellService extends Service {
     this.mountTarget = config.el
     this.startup = config.startup
     this.component = config.component ?? AppShell
+    this.props = config.props ?? {}
     ctx.effect(() => () => this.unmount(), 'shell:unmount')
     this.mount()
   }
@@ -62,7 +66,7 @@ export class ShellService extends Service {
     if (!target) {
       throw new Error(`找不到挂载节点 ${String(this.mountTarget)}`)
     }
-    const app = createApp(this.component)
+    const app = createApp(this.component, this.props)
     app.config.performance = true
     app.config.errorHandler = (error, _instance, info) => {
       console.error(`[shell] ${info}`, error)

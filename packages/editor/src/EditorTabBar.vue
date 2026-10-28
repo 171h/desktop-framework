@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type {} from '@df/platform'
 import type { EditorDocument } from './types'
 import { useCordis } from '@df/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
@@ -12,6 +13,9 @@ const menuStyle = reactive({ left: '0px', top: '0px' })
 const dropIndex = ref<number>()
 const dropLeft = ref(0)
 const dragId = ref<string>()
+let dropped = false
+let leftWindow = false
+let lastDragEvent: DragEvent | undefined
 let scrollerObserver: ResizeObserver | undefined
 
 const documents = computed(() => ctx.editor.documents)
@@ -158,6 +162,9 @@ function onDragStart(document: EditorDocument, event: DragEvent): void {
     return
   }
   dragId.value = document.id
+  dropped = false
+  leftWindow = false
+  lastDragEvent = event
   event.dataTransfer.effectAllowed = 'copyMove'
   event.dataTransfer.setData('application/x-df-editor-tab', document.id)
   event.dataTransfer.setData('text/plain', document.title)
@@ -217,6 +224,7 @@ function onDrop(event: DragEvent): void {
   event.preventDefault()
   event.stopPropagation()
   applyReorder(dragId.value, dropIndex.value ?? documents.value.length)
+  dropped = true
   clearDropFeedback()
 }
 
@@ -253,9 +261,77 @@ function clearDropFeedback(): void {
   dropIndex.value = undefined
 }
 
+function onWindowDrag(event: DragEvent): void {
+  if (!dragId.value) {
+    return
+  }
+  lastDragEvent = event
+  if (event.clientX <= 0 || event.clientY <= 0 || event.clientX >= window.innerWidth || event.clientY >= window.innerHeight) {
+    leftWindow = true
+  }
+}
+
+function onWindowDragLeave(event: DragEvent): void {
+  if (dragId.value && event.relatedTarget === null) {
+    leftWindow = true
+  }
+}
+
+function onWindowDragEnter(event: DragEvent): void {
+  if (dragId.value && event.relatedTarget === null) {
+    leftWindow = false
+  }
+}
+
 function onDragEnd(): void {
+  const id = dragId.value
+  const outside = leftWindow || Boolean(lastDragEvent && (
+    lastDragEvent.clientX <= 0
+    || lastDragEvent.clientY <= 0
+    || lastDragEvent.clientX >= window.innerWidth
+    || lastDragEvent.clientY >= window.innerHeight
+  ))
+  const shouldDetach = Boolean(id) && !dropped && outside
+  const document = id
+    ? documents.value.find(item => item.id === id)
+    : undefined
   dragId.value = undefined
+  dropped = false
+  leftWindow = false
+  lastDragEvent = undefined
   clearDropFeedback()
+  if (shouldDetach && document) {
+    void detachDocument(document)
+  }
+}
+
+async function detachDocument(document: EditorDocument): Promise<void> {
+  if (!ctx.platform.supportsDetachedWindows) {
+    return
+  }
+  const payload = ctx.editor.detachPayload(document.id)
+  if (!payload) {
+    return
+  }
+  try {
+    const created = await ctx.platform.openDetachedWindow({
+      kind: 'editor',
+      title: document.title,
+      payload,
+      bounds: {
+        x: window.screenX + 48,
+        y: window.screenY + 48,
+        width: Math.max(640, Math.round(window.outerWidth * 0.72)),
+        height: Math.max(480, Math.round(window.outerHeight * 0.8)),
+      },
+    })
+    if (created) {
+      ctx.editor.release(document.id)
+    }
+  }
+  catch (error) {
+    ctx.logger.warn(`[editor] 创建独立窗口失败：${String(error)}`)
+  }
 }
 
 function openContext(document: EditorDocument, event: MouseEvent): void {
@@ -283,6 +359,15 @@ function contextData(document: EditorDocument): Array<Record<string, unknown>> {
     { label: '关闭右侧标签页', value: 'right' },
     { label: '关闭已保存的标签页', value: 'saved' },
     { separator: true },
+    ...(ctx.platform.supportsDetachedWindows
+      ? [
+          {
+            label: '移动到新窗口',
+            value: 'detach',
+          },
+          { separator: true },
+        ]
+      : []),
     {
       label: document.pinned ? '取消固定' : '固定标签页',
       value: 'pin',
@@ -316,6 +401,12 @@ function onContextSelect(event: Event): void {
   }
   else if (action === 'pin') {
     ctx.editor.togglePin(id)
+  }
+  else if (action === 'detach') {
+    const document = documents.value.find(item => item.id === id)
+    if (document) {
+      void detachDocument(document)
+    }
   }
   else if (action === 'all') {
     ctx.editor.closeAll()
@@ -351,10 +442,16 @@ onMounted(() => {
     })
     scrollerObserver.observe(scroller.value)
   }
+  window.addEventListener('drag', onWindowDrag, true)
+  window.addEventListener('dragleave', onWindowDragLeave, true)
+  window.addEventListener('dragenter', onWindowDragEnter, true)
 })
 
 onBeforeUnmount(() => {
   scrollerObserver?.disconnect()
+  window.removeEventListener('drag', onWindowDrag, true)
+  window.removeEventListener('dragleave', onWindowDragLeave, true)
+  window.removeEventListener('dragenter', onWindowDragEnter, true)
 })
 </script>
 

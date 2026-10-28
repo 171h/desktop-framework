@@ -7,6 +7,7 @@
  */
 import type {
   DesktopBridge,
+  DetachedWindowRequest,
   DeveloperAction,
   DeveloperDiagnostics,
   FileDialogFilter,
@@ -15,7 +16,9 @@ import type {
   OpenedFile,
   SaveFileRequest,
   TitleBarOverlayOptions,
+  WindowContext,
   WindowControlAction,
+  WindowMessage,
   WindowState,
 } from '@df/core'
 import type { Context } from 'cordis'
@@ -137,6 +140,37 @@ export class PlatformService extends Service {
       return
     }
     window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  /** 当前宿主是否支持创建独立窗口。 */
+  get supportsDetachedWindows(): boolean {
+    return typeof this.bridge?.openDetachedWindow === 'function'
+  }
+
+  /** 创建编辑器或面板独立窗口。 */
+  async openDetachedWindow(request: DetachedWindowRequest): Promise<boolean> {
+    if (!this.bridge?.openDetachedWindow) {
+      return false
+    }
+    return this.bridge.openDetachedWindow(request)
+  }
+
+  /** 读取当前窗口的启动上下文；主窗口返回 null。 */
+  async getWindowContext(): Promise<WindowContext | null> {
+    return this.bridge?.getWindowContext?.() ?? null
+  }
+
+  /** 向其他框架窗口广播消息。 */
+  sendWindowMessage(topic: string, payload: unknown): void {
+    this.bridge?.sendWindowMessage?.(topic, payload)
+  }
+
+  /** 订阅其他框架窗口的消息。 */
+  onWindowMessage(listener: (message: WindowMessage) => void): IDisposable {
+    const dispose = this.bridge?.onWindowMessage?.(listener)
+    return {
+      dispose: () => dispose?.(),
+    }
   }
 
   /** 当前宿主是否暴露受控开发者操作。 */
