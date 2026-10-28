@@ -27,6 +27,21 @@ pnpm prepare
 git submodule update --init --depth 1 submodules/nusys-ui
 ```
 
+Electron 二进制约 250MB，可能因网络或代理在 `pnpm install` 时下载失败。单独安装：
+
+```bash
+pnpm setup:electron
+```
+
+如果默认源不可用，脚本会自动尝试 npmmirror 镜像；也可以手动指定已有 Electron：
+
+```powershell
+$env:ELECTRON_EXEC_PATH="C:\path\to\electron.exe"
+pnpm dev:desktop
+```
+
+`pnpm dev:desktop` 和 `pnpm package:desktop` 都会在启动前执行这一步检查。
+
 ## 构建 WASM
 
 ```bash

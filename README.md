@@ -34,6 +34,7 @@ git clone --recurse-submodules https://github.com/171h/desktop-framework.git
 cd desktop-framework
 corepack enable
 pnpm install
+pnpm setup:electron # 可选：Electron 二进制下载失败时单独安装
 pnpm build:wasm
 pnpm dev            # 浏览器中的示例工作台
 pnpm dev:desktop    # Electron 桌面示例
