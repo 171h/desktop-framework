@@ -338,8 +338,13 @@ export class EditorService extends Service {
     let state: unknown
     try {
       state = document.getDetachState?.()
+      if (state !== undefined) {
+        // IPC 只接受可结构化克隆的纯数据；同时剥离 Vue 响应式代理。
+        state = JSON.parse(JSON.stringify(state))
+      }
     }
     catch (error) {
+      state = undefined
       this.ctx.logger.warn(`[editor] 读取文档 ${id} 的独立窗口状态失败：${String(error)}`)
     }
     return {
@@ -353,6 +358,15 @@ export class EditorService extends Service {
 
   /** 在独立窗口中恢复文档，并只保留该文档。 */
   restoreDetached(payload: DetachedEditorPayload): boolean {
+    const accepted = this.acceptDetached(payload)
+    if (accepted) {
+      this.isolate(payload.id)
+    }
+    return accepted
+  }
+
+  /** 接受来自其他窗口的文档；保留目标窗口已有标签。 */
+  acceptDetached(payload: DetachedEditorPayload): boolean {
     const handler = this.detachHandlers.get(payload.detachKey)
     const restored = handler?.(payload.state)
     if (restored) {
@@ -376,7 +390,6 @@ export class EditorService extends Service {
     else {
       this.activate(payload.id)
     }
-    this.isolate(payload.id)
     return Boolean(this.documentById(payload.id))
   }
 

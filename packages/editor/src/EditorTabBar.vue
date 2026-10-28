@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { WindowMessage } from '@df/core'
 import type {} from '@df/platform'
-import type { EditorDocument } from './types'
+import type { DetachedEditorPayload, EditorDocument } from './types'
 import { useCordis } from '@df/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
@@ -13,10 +14,15 @@ const menuStyle = reactive({ left: '0px', top: '0px' })
 const dropIndex = ref<number>()
 const dropLeft = ref(0)
 const dragId = ref<string>()
+const remoteDrag = ref<{ id: string, payload: DetachedEditorPayload }>()
+const localDrag = ref<{ id: string, documentId: string, accepted: boolean }>()
 let dropped = false
 let leftWindow = false
 let lastDragEvent: DragEvent | undefined
 let scrollerObserver: ResizeObserver | undefined
+let remoteDragTimer: ReturnType<typeof setTimeout> | undefined
+let messageSubscription: { dispose: () => void } | undefined
+let detachedWindow = false
 
 const documents = computed(() => ctx.editor.documents)
 const activeId = computed(() => ctx.editor.activeId)
@@ -165,13 +171,36 @@ function onDragStart(document: EditorDocument, event: DragEvent): void {
   dropped = false
   leftWindow = false
   lastDragEvent = event
+  remoteDrag.value = undefined
+  localDrag.value = undefined
   event.dataTransfer.effectAllowed = 'copyMove'
   event.dataTransfer.setData('application/x-df-editor-tab', document.id)
   event.dataTransfer.setData('text/plain', document.title)
+  if (!ctx.platform.supportsDetachedWindows) {
+    return
+  }
+  const payload = ctx.editor.detachPayload(document.id)
+  if (!payload) {
+    return
+  }
+  const drag = {
+    id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+    documentId: document.id,
+    accepted: false,
+  }
+  localDrag.value = drag
+  ctx.platform.sendWindowMessage('editor/drag-begin', {
+    dragId: drag.id,
+    payload,
+  })
 }
 
 function onDragOver(event: DragEvent): void {
-  if (!dragId.value || !track.value || !scroller.value) {
+  const local = dragId.value
+  const remote = local
+    ? undefined
+    : remoteDrag.value
+  if ((!local && !remote) || !track.value || !scroller.value) {
     return
   }
   event.preventDefault()
@@ -190,12 +219,14 @@ function onDragOver(event: DragEvent): void {
       break
     }
   }
-  const source = documents.value.find(document => document.id === dragId.value)
-  if (source?.pinned) {
-    target = Math.min(target, pinnedCount.value)
-  }
-  else {
-    target = Math.max(target, pinnedCount.value)
+  if (local) {
+    const source = documents.value.find(document => document.id === local)
+    if (source?.pinned) {
+      target = Math.min(target, pinnedCount.value)
+    }
+    else {
+      target = Math.max(target, pinnedCount.value)
+    }
   }
   dropIndex.value = target
   const scrollerRect = scroller.value.getBoundingClientRect()
@@ -218,14 +249,43 @@ function onDragOver(event: DragEvent): void {
 }
 
 function onDrop(event: DragEvent): void {
-  if (!dragId.value) {
+  const remote = remoteDrag.value
+  if (!dragId.value && !remote) {
     return
   }
   event.preventDefault()
   event.stopPropagation()
-  applyReorder(dragId.value, dropIndex.value ?? documents.value.length)
+  if (remote) {
+    const target = dropIndex.value ?? documents.value.length
+    const accepted = ctx.editor.acceptDetached(remote.payload)
+    if (accepted) {
+      reorderAccepted(remote.payload.id, target)
+      ctx.platform.sendWindowMessage('editor/drag-accept', { dragId: remote.id })
+    }
+    remoteDrag.value = undefined
+    clearTimeout(remoteDragTimer)
+    remoteDragTimer = undefined
+    clearDropFeedback()
+    return
+  }
+  const id = dragId.value
+  if (!id) {
+    return
+  }
+  applyReorder(id, dropIndex.value ?? documents.value.length)
   dropped = true
   clearDropFeedback()
+}
+
+function reorderAccepted(id: string, target: number): void {
+  const ids = documents.value.map(document => document.id)
+  const from = ids.indexOf(id)
+  if (from >= 0) {
+    ids.splice(from, 1)
+  }
+  ids.splice(Math.max(0, Math.min(target, ids.length)), 0, id)
+  ctx.editor.reorder(ids)
+  ctx.editor.activate(id)
 }
 
 function onDragLeave(event: DragEvent): void {
@@ -283,8 +343,9 @@ function onWindowDragEnter(event: DragEvent): void {
   }
 }
 
-function onDragEnd(): void {
+async function onDragEnd(): Promise<void> {
   const id = dragId.value
+  const drag = localDrag.value
   const outside = leftWindow || Boolean(lastDragEvent && (
     lastDragEvent.clientX <= 0
     || lastDragEvent.clientY <= 0
@@ -300,9 +361,81 @@ function onDragEnd(): void {
   leftWindow = false
   lastDragEvent = undefined
   clearDropFeedback()
-  if (shouldDetach && document) {
-    void detachDocument(document)
+  if (!drag) {
+    return
   }
+  if (drag.accepted) {
+    finishLocalDrag(drag)
+    closeEmptyDetachedWindow()
+    return
+  }
+  if (shouldDetach && document) {
+    // 先等待目标窗口通过 IPC 确认接收，避免跨窗口拖放时又创建新窗口。
+    await new Promise(resolve => setTimeout(resolve, 350))
+    if (!drag.accepted) {
+      await detachDocument(document)
+    }
+  }
+  finishLocalDrag(drag)
+  closeEmptyDetachedWindow()
+}
+
+function finishLocalDrag(drag: { id: string, documentId: string, accepted: boolean }): void {
+  if (localDrag.value !== drag) {
+    return
+  }
+  localDrag.value = undefined
+  ctx.platform.sendWindowMessage('editor/drag-end', { dragId: drag.id })
+}
+
+function closeEmptyDetachedWindow(): void {
+  if (detachedWindow && documents.value.length === 0) {
+    void ctx.platform.windowControl('close')
+  }
+}
+
+function onEditorWindowMessage(message: WindowMessage): void {
+  if (message.topic === 'editor/drag-begin') {
+    const data = message.payload as { dragId?: unknown, payload?: unknown }
+    if (typeof data?.dragId !== 'string' || !data.payload || typeof data.payload !== 'object') {
+      return
+    }
+    remoteDrag.value = {
+      id: data.dragId,
+      payload: data.payload as DetachedEditorPayload,
+    }
+    clearTimeout(remoteDragTimer)
+    remoteDragTimer = setTimeout(() => {
+      remoteDrag.value = undefined
+    }, 10_000)
+    return
+  }
+  if (message.topic === 'editor/drag-end') {
+    const data = message.payload as { dragId?: unknown }
+    if (!remoteDrag.value || typeof data?.dragId !== 'string' || data.dragId === remoteDrag.value.id) {
+      remoteDrag.value = undefined
+      clearTimeout(remoteDragTimer)
+      remoteDragTimer = undefined
+    }
+    return
+  }
+  if (message.topic !== 'editor/drag-accept') {
+    return
+  }
+  const data = message.payload as { dragId?: unknown }
+  const drag = localDrag.value
+  if (!drag || data?.dragId !== drag.id) {
+    return
+  }
+  drag.accepted = true
+  ctx.editor.release(drag.documentId)
+  finishLocalDrag(drag)
+  dragId.value = undefined
+  dropped = false
+  leftWindow = false
+  lastDragEvent = undefined
+  clearDropFeedback()
+  void nextTick(closeEmptyDetachedWindow)
 }
 
 async function detachDocument(document: EditorDocument): Promise<void> {
@@ -442,6 +575,10 @@ onMounted(() => {
     })
     scrollerObserver.observe(scroller.value)
   }
+  messageSubscription = ctx.platform.onWindowMessage(onEditorWindowMessage)
+  void ctx.platform.getWindowContext().then((context) => {
+    detachedWindow = Boolean(context)
+  })
   window.addEventListener('drag', onWindowDrag, true)
   window.addEventListener('dragleave', onWindowDragLeave, true)
   window.addEventListener('dragenter', onWindowDragEnter, true)
@@ -449,6 +586,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   scrollerObserver?.disconnect()
+  messageSubscription?.dispose()
+  clearTimeout(remoteDragTimer)
   window.removeEventListener('drag', onWindowDrag, true)
   window.removeEventListener('dragleave', onWindowDragLeave, true)
   window.removeEventListener('dragenter', onWindowDragEnter, true)

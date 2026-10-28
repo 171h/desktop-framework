@@ -182,4 +182,28 @@ describe('editor', () => {
     registration.dispose()
     await ctx.kernel.dispose()
   })
+
+  it('accepts a detached document without closing existing tabs', async () => {
+    const ctx = await setup()
+    ctx.editor.open({ id: 'local', title: '本地', component: TestView })
+    ctx.editor.open({
+      id: 'remote',
+      title: '远程',
+      component: TestView,
+      detachKey: 'remote',
+    })
+    const payload = ctx.editor.detachPayload('remote')!
+    ctx.editor.release('remote')
+    const registration = ctx.editor.registerDetachHandler('remote', () => ({
+      id: 'remote',
+      title: '远程',
+      component: TestView,
+      detachKey: 'remote',
+    }))
+    expect(ctx.editor.acceptDetached(payload)).toBe(true)
+    expect(ctx.editor.documents.map(document => document.id)).toEqual(['welcome', 'local', 'remote'])
+    expect(ctx.editor.activeId).toBe('remote')
+    registration.dispose()
+    await ctx.kernel.dispose()
+  })
 })
