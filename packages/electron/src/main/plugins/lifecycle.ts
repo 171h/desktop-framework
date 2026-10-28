@@ -1,7 +1,7 @@
 /** Electron 主进程生命周期插件。 */
 import type { Context } from 'cordis'
-import { errorMessage } from '@desktop-framework/core'
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { errorMessage } from '@df/core'
+import { DisposableStore, toDisposable } from '@df/vscode'
 import { app } from 'electron'
 
 export const name = 'electron:lifecycle'

@@ -1,11 +1,11 @@
 /**
- * @desktop-framework/menu · 应用菜单
+ * @df/menu · 应用菜单
  *
  * 命令通过 `menu` 元数据声明归属路径（例如 `['视图']`），本服务聚合成
  * 应用菜单分组。快速访问工具栏使用同一命令源（`toolbar` 元数据），因此
  * 三处入口不会出现状态不一致。
  */
-import type { CommandDefinition, IDisposable, MenuPlacement } from '@desktop-framework/core'
+import type { CommandDefinition, IDisposable, MenuPlacement } from '@df/core'
 import type { Context } from 'cordis'
 import { Service } from 'cordis'
 import { computed, ref } from 'vue'

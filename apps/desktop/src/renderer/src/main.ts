@@ -1,5 +1,5 @@
 import 'virtual:uno.css'
-import '@desktop-framework/ui/theme.css'
+import '@df/ui/theme.css'
 
 async function boot(): Promise<void> {
   let runtime: Awaited<ReturnType<NonNullable<Window['desktopFramework']>['getRuntime']>> = null
@@ -34,7 +34,7 @@ async function boot(): Promise<void> {
   }
 
   // 本地框架延迟到确定不走远程运行时后再加载，避免重复注册 nusys-ui Custom Elements。
-  const { createPlaygroundApp } = await import('@desktop-framework/playground')
+  const { createPlaygroundApp } = await import('@df/playground')
   await createPlaygroundApp({
     el: '#app',
     title: 'Desktop Framework — Electron Playground',

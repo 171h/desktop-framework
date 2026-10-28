@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import type { DesktopBridge } from '@desktop-framework/core'
+import type { DesktopBridge } from '@df/core'
 
 declare global {
   interface Window {

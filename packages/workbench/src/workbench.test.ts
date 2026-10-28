@@ -1,8 +1,8 @@
-import type { StorageLike } from '@desktop-framework/settings'
-import { apply as commandsPlugin } from '@desktop-framework/commands'
-import { createFrameworkContext } from '@desktop-framework/kernel'
-import { apply as settingsPlugin } from '@desktop-framework/settings'
-import { apply as piniaPlugin } from '@desktop-framework/vue'
+import type { StorageLike } from '@df/settings'
+import { apply as commandsPlugin } from '@df/commands'
+import { createFrameworkContext } from '@df/kernel'
+import { apply as settingsPlugin } from '@df/settings'
+import { apply as piniaPlugin } from '@df/vue'
 import { describe, expect, it } from 'vitest'
 import { apply as workbenchPlugin } from '../src'
 

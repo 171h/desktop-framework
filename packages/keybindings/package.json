@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/keybindings",
+  "name": "@df/keybindings",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -9,11 +9,11 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@desktop-framework/commands": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
+    "@df/commands": "workspace:*",
+    "@df/core": "workspace:*",
     "cordis": "^4.0.0-rc.12"
   },
   "devDependencies": {
-    "@desktop-framework/kernel": "workspace:*"
+    "@df/kernel": "workspace:*"
   }
 }

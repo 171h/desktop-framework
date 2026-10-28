@@ -47,7 +47,7 @@ desktop-framework/
 
 ## 命名约定
 
-- 包：`@desktop-framework/<capability>`
+- 包：`@df/<capability>`
 - Rust crate：`df_<capability>`；WASM 包名固定 `df_wasm`
 - Cordis 插件 id：`framework:<capability>`；业务插件建议 `vendor:<name>`
 - 服务名：短小写，例如 `commands`、`workbench`

@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/explorer · 资源浏览器
+ * @df/explorer · 资源浏览器
  *
  * 不直接持有数据：工作区来自 workbench store，插件来自 kernel 事件，
  * 命令来自 commands 注册表。视图关闭后只释放自己的槽位注册。

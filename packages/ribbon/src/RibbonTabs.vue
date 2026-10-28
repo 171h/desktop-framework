@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useCordis } from '@desktop-framework/vue'
+import { useCordis } from '@df/vue'
 import { computed, nextTick, ref } from 'vue'
 
 const ctx = useCordis()

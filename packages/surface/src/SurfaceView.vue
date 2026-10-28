@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SurfaceNode } from './service'
-import { useCordis } from '@desktop-framework/vue'
+import { useCordis } from '@df/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { GridRenderer } from './renderer'
 

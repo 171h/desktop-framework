@@ -1,6 +1,6 @@
 /** 会话安全策略。 */
 import type { Context } from 'cordis'
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { DisposableStore, toDisposable } from '@df/vscode'
 import { app, session } from 'electron'
 
 export const name = 'electron:session'

@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/runtime",
+  "name": "@df/runtime",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -14,9 +14,9 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@desktop-framework/app": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/kernel": "workspace:*"
+    "@df/app": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/kernel": "workspace:*"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.10",

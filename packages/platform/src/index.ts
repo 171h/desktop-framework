@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/platform · 宿主能力适配
+ * @df/platform · 宿主能力适配
  *
  * Electron 渲染进程通过 preload 暴露的 `window.desktopFramework` 访问原生
  * 能力；浏览器使用 File System Access / input[type=file] 与下载链接降级。
@@ -15,9 +15,9 @@ import type {
   TitleBarOverlayOptions,
   WindowControlAction,
   WindowState,
-} from '@desktop-framework/core'
+} from '@df/core'
 import type { Context } from 'cordis'
-import { errorMessage } from '@desktop-framework/core'
+import { errorMessage } from '@df/core'
 import { Service } from 'cordis'
 
 declare module 'cordis' {

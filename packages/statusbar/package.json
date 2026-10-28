@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/statusbar",
+  "name": "@df/statusbar",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -10,9 +10,9 @@
     "./StatusBar.vue": "./src/StatusBar.vue"
   },
   "dependencies": {
-    "@desktop-framework/commands": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/vue": "workspace:*",
+    "@df/commands": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/vue": "workspace:*",
     "cordis": "^4.0.0-rc.12",
     "vue": "^3.5.44"
   }

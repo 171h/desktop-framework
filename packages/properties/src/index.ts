@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/properties · 属性面板
+ * @df/properties · 属性面板
  *
  * 面板本身不感知业务类型，只读取 selection 服务的 `kind` 与 `data`。
  */

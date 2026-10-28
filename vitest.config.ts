@@ -10,7 +10,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@desktop-framework': fileURLToPath(new URL('./packages', import.meta.url)),
+      '@df': fileURLToPath(new URL('./packages', import.meta.url)),
     },
   },
   test: {

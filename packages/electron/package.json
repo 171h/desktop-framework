@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/electron",
+  "name": "@df/electron",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -17,10 +17,10 @@
     "electron": ">=45.0.0"
   },
   "dependencies": {
-    "@desktop-framework/bootstrap": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/kernel": "workspace:*",
-    "@desktop-framework/vscode": "workspace:*",
+    "@df/bootstrap": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/kernel": "workspace:*",
+    "@df/vscode": "workspace:*",
     "cordis": "^4.0.0-rc.12"
   }
 }

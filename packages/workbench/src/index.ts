@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/workbench · 工作台服务
+ * @df/workbench · 工作台服务
  *
  * 负责：
  * - 注册/注销停靠视图；
@@ -17,10 +17,10 @@ import type {
   ViewDefinition,
   ViewLocation,
   WorkspacePreset,
-} from '@desktop-framework/core'
+} from '@df/core'
 import type { Context } from 'cordis'
 import type { PersistedWorkbench } from './store'
-import { debounce, errorMessage } from '@desktop-framework/core'
+import { debounce, errorMessage } from '@df/core'
 import { Service } from 'cordis'
 import { markRaw, ref, watch } from 'vue'
 import { BUILTIN_WORKSPACES, defaultFloatingDock, useWorkbenchStore } from './store'

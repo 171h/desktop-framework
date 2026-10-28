@@ -4,7 +4,7 @@
  * 业务插件不应重复实现这些命令；直接调用或覆盖即可。
  */
 import type { Context } from 'cordis'
-import { errorMessage } from '@desktop-framework/core'
+import { errorMessage } from '@df/core'
 
 export const name = 'framework:app-commands'
 export const inject = [

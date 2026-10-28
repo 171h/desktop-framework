@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { EditorTabBar } from '@desktop-framework/editor'
-import { useCordis } from '@desktop-framework/vue'
+import { EditorTabBar } from '@df/editor'
+import { useCordis } from '@df/vue'
 import { computed } from 'vue'
 
 const ctx = useCordis()

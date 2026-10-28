@@ -1,7 +1,7 @@
 import type { Context } from 'cordis'
 import type { Pinia } from 'pinia'
 /**
- * @desktop-framework/vue · Vue / Pinia 桥接
+ * @df/vue · Vue / Pinia 桥接
  *
  * Pinia 实例作为 Cordis 服务存在，插件可以在挂载 Vue 之前创建 store；Vue
  * 应用挂载时把 Cordis 上下文 provide 给组件树，业务组件通过 `useCordis()`

@@ -241,28 +241,28 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@desktop-framework/bootstrap':
+      '@df/bootstrap':
         specifier: workspace:*
         version: link:../../packages/bootstrap
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@desktop-framework/electron':
+      '@df/electron':
         specifier: workspace:*
         version: link:../../packages/electron
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
-      '@desktop-framework/platform':
+      '@df/platform':
         specifier: workspace:*
         version: link:../../packages/platform
-      '@desktop-framework/playground':
+      '@df/playground':
         specifier: workspace:*
         version: link:../../playground/app
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@desktop-framework/vscode':
+      '@df/vscode':
         specifier: workspace:*
         version: link:../../packages/vscode
       electron:
@@ -290,13 +290,13 @@ importers:
 
   apps/web:
     dependencies:
-      '@desktop-framework/playground':
+      '@df/playground':
         specifier: workspace:*
         version: link:../../playground/app
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../../packages/vue
       vue:
@@ -324,67 +324,67 @@ importers:
 
   packages/app:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/editor':
+      '@df/editor':
         specifier: workspace:*
         version: link:../editor
-      '@desktop-framework/explorer':
+      '@df/explorer':
         specifier: workspace:*
         version: link:../explorer
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
-      '@desktop-framework/keybindings':
+      '@df/keybindings':
         specifier: workspace:*
         version: link:../keybindings
-      '@desktop-framework/menu':
+      '@df/menu':
         specifier: workspace:*
         version: link:../menu
-      '@desktop-framework/notifications':
+      '@df/notifications':
         specifier: workspace:*
         version: link:../notifications
-      '@desktop-framework/output':
+      '@df/output':
         specifier: workspace:*
         version: link:../output
-      '@desktop-framework/platform':
+      '@df/platform':
         specifier: workspace:*
         version: link:../platform
-      '@desktop-framework/properties':
+      '@df/properties':
         specifier: workspace:*
         version: link:../properties
-      '@desktop-framework/ribbon':
+      '@df/ribbon':
         specifier: workspace:*
         version: link:../ribbon
-      '@desktop-framework/selection':
+      '@df/selection':
         specifier: workspace:*
         version: link:../selection
-      '@desktop-framework/settings':
+      '@df/settings':
         specifier: workspace:*
         version: link:../settings
-      '@desktop-framework/statusbar':
+      '@df/statusbar':
         specifier: workspace:*
         version: link:../statusbar
-      '@desktop-framework/surface':
+      '@df/surface':
         specifier: workspace:*
         version: link:../surface
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../ui
-      '@desktop-framework/vscode':
+      '@df/vscode':
         specifier: workspace:*
         version: link:../vscode
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
-      '@desktop-framework/wasm':
+      '@df/wasm':
         specifier: workspace:*
         version: link:../wasm
-      '@desktop-framework/workbench':
+      '@df/workbench':
         specifier: workspace:*
         version: link:../workbench
       '@vscode/codicons':
@@ -405,7 +405,7 @@ importers:
 
   packages/bootstrap:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       tar:
@@ -414,7 +414,7 @@ importers:
 
   packages/commands:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
@@ -424,7 +424,7 @@ importers:
         specifier: ^3.5.44
         version: 3.5.44(typescript@6.0.3)
     devDependencies:
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
 
@@ -436,16 +436,16 @@ importers:
 
   packages/editor:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/keybindings':
+      '@df/keybindings':
         specifier: workspace:*
         version: link:../keybindings
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
       cordis:
@@ -460,16 +460,16 @@ importers:
 
   packages/electron:
     dependencies:
-      '@desktop-framework/bootstrap':
+      '@df/bootstrap':
         specifier: workspace:*
         version: link:../bootstrap
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
-      '@desktop-framework/vscode':
+      '@df/vscode':
         specifier: workspace:*
         version: link:../vscode
       cordis:
@@ -481,22 +481,22 @@ importers:
 
   packages/explorer:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/selection':
+      '@df/selection':
         specifier: workspace:*
         version: link:../selection
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
-      '@desktop-framework/workbench':
+      '@df/workbench':
         specifier: workspace:*
         version: link:../workbench
       cordis:
@@ -508,7 +508,7 @@ importers:
 
   packages/kernel:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
@@ -517,38 +517,38 @@ importers:
 
   packages/keybindings:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
         specifier: ^4.0.0-rc.12
         version: 4.0.0-rc.12
     devDependencies:
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
 
   packages/menu:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/keybindings':
+      '@df/keybindings':
         specifier: workspace:*
         version: link:../keybindings
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
-      '@desktop-framework/workbench':
+      '@df/workbench':
         specifier: workspace:*
         version: link:../workbench
       cordis:
@@ -560,10 +560,10 @@ importers:
 
   packages/notifications:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
       cordis:
@@ -575,16 +575,16 @@ importers:
 
   packages/output:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
-      '@desktop-framework/workbench':
+      '@df/workbench':
         specifier: workspace:*
         version: link:../workbench
       cordis:
@@ -596,7 +596,7 @@ importers:
 
   packages/platform:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
@@ -605,22 +605,22 @@ importers:
 
   packages/properties:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/selection':
+      '@df/selection':
         specifier: workspace:*
         version: link:../selection
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
-      '@desktop-framework/wasm':
+      '@df/wasm':
         specifier: workspace:*
         version: link:../wasm
-      '@desktop-framework/workbench':
+      '@df/workbench':
         specifier: workspace:*
         version: link:../workbench
       cordis:
@@ -632,25 +632,25 @@ importers:
 
   packages/ribbon:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/keybindings':
+      '@df/keybindings':
         specifier: workspace:*
         version: link:../keybindings
-      '@desktop-framework/settings':
+      '@df/settings':
         specifier: workspace:*
         version: link:../settings
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
-      '@desktop-framework/workbench':
+      '@df/workbench':
         specifier: workspace:*
         version: link:../workbench
       cordis:
@@ -663,19 +663,19 @@ importers:
         specifier: ^3.5.44
         version: 3.5.44(typescript@6.0.3)
     devDependencies:
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
 
   packages/runtime:
     dependencies:
-      '@desktop-framework/app':
+      '@df/app':
         specifier: workspace:*
         version: link:../app
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
     devDependencies:
@@ -694,7 +694,7 @@ importers:
 
   packages/selection:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
@@ -706,26 +706,26 @@ importers:
 
   packages/settings:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
         specifier: ^4.0.0-rc.12
         version: 4.0.0-rc.12
     devDependencies:
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
 
   packages/statusbar:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
       cordis:
@@ -737,25 +737,25 @@ importers:
 
   packages/surface:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/editor':
+      '@df/editor':
         specifier: workspace:*
         version: link:../editor
-      '@desktop-framework/selection':
+      '@df/selection':
         specifier: workspace:*
         version: link:../selection
-      '@desktop-framework/statusbar':
+      '@df/statusbar':
         specifier: workspace:*
         version: link:../statusbar
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
       cordis:
@@ -767,16 +767,16 @@ importers:
 
   packages/ui:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/settings':
+      '@df/settings':
         specifier: workspace:*
         version: link:../settings
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
       '@vscode/codicons':
@@ -800,7 +800,7 @@ importers:
 
   packages/vue:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
@@ -815,7 +815,7 @@ importers:
 
   packages/wasm:
     dependencies:
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
       cordis:
@@ -824,16 +824,16 @@ importers:
 
   packages/workbench:
     dependencies:
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../core
-      '@desktop-framework/settings':
+      '@df/settings':
         specifier: workspace:*
         version: link:../settings
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../vue
       cordis:
@@ -846,37 +846,37 @@ importers:
         specifier: ^3.5.44
         version: 3.5.44(typescript@6.0.3)
     devDependencies:
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../kernel
 
   playground/app:
     dependencies:
-      '@desktop-framework/app':
+      '@df/app':
         specifier: workspace:*
         version: link:../../packages/app
-      '@desktop-framework/commands':
+      '@df/commands':
         specifier: workspace:*
         version: link:../../packages/commands
-      '@desktop-framework/core':
+      '@df/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@desktop-framework/kernel':
+      '@df/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
-      '@desktop-framework/notifications':
+      '@df/notifications':
         specifier: workspace:*
         version: link:../../packages/notifications
-      '@desktop-framework/surface':
+      '@df/surface':
         specifier: workspace:*
         version: link:../../packages/surface
-      '@desktop-framework/ui':
+      '@df/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@desktop-framework/vue':
+      '@df/vue':
         specifier: workspace:*
         version: link:../../packages/vue
-      '@desktop-framework/workbench':
+      '@df/workbench':
         specifier: workspace:*
         version: link:../../packages/workbench
       cordis:

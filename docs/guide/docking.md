@@ -18,7 +18,7 @@
 ## 服务 API
 
 ```ts
-import type { SidebarId } from '@desktop-framework/core'
+import type { SidebarId } from '@df/core'
 
 // 将侧栏分离为浮动面板
 ctx.workbench.floatDock('left', {

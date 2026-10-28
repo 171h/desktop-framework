@@ -1,12 +1,12 @@
 /**
- * @desktop-framework/notifications · 通知中心
+ * @df/notifications · 通知中心
  *
  * 通知状态使用 Vue 响应式数组，宿主的通知 UI 直接消费；命令失败会被自动
  * 转成错误通知，避免每个调用点重复处理。
  */
-import type { FrameworkNotification, NotificationLevel } from '@desktop-framework/core'
+import type { FrameworkNotification, NotificationLevel } from '@df/core'
 import type { Context } from 'cordis'
-import { errorMessage } from '@desktop-framework/core'
+import { errorMessage } from '@df/core'
 import { Service } from 'cordis'
 import { ref } from 'vue'
 

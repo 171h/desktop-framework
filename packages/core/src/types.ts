@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/core · 公共契约
+ * @df/core · 公共契约
  *
  * 本包只包含类型、常量与不依赖 DOM 的小工具，任何插件都可以安全依赖。
  */
@@ -51,7 +51,7 @@ declare module 'cordis' {
   }
 
   interface Context {
-    /** 内核服务由 `@desktop-framework/kernel` 提供。 */
+    /** 内核服务由 `@df/kernel` 提供。 */
     kernel: import('./types').KernelServiceContract
   }
 }
@@ -402,7 +402,7 @@ export interface FrameworkRuntimeInfo {
 /**
  * preload 暴露给渲染进程的最小桌面桥。
  *
- * 浏览器环境没有该对象，`@desktop-framework/platform` 会提供等价降级。
+ * 浏览器环境没有该对象，`@df/platform` 会提供等价降级。
  */
 export interface DesktopBridge {
   readonly platform: string

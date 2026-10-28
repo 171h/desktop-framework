@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { CommandDefinition } from '@desktop-framework/core'
-import { useCordis } from '@desktop-framework/vue'
+import type { CommandDefinition } from '@df/core'
+import { useCordis } from '@df/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const ctx = useCordis()

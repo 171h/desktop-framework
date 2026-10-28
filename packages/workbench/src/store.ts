@@ -4,8 +4,8 @@
  * 布局与工作区预设是 UI 的唯一事实来源；停靠尺寸、可见性与活动视图都直接
  * 序列化，因此用户拖拽后无需额外同步逻辑。
  */
-import type { DockSide, DockState, FloatingDockState, SidebarId, ViewLocation, WorkbenchLayout, WorkspacePreset } from '@desktop-framework/core'
-import { clamp } from '@desktop-framework/core'
+import type { DockSide, DockState, FloatingDockState, SidebarId, ViewLocation, WorkbenchLayout, WorkspacePreset } from '@df/core'
+import { clamp } from '@df/core'
 import { defineStore } from 'pinia'
 
 /** 持久化结构。 */

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { KernelPluginInfo } from '@desktop-framework/core'
-import { useCordis } from '@desktop-framework/vue'
+import type { KernelPluginInfo } from '@df/core'
+import { useCordis } from '@df/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 const ctx = useCordis()

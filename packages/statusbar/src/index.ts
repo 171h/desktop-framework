@@ -1,10 +1,10 @@
 /**
- * @desktop-framework/statusbar · 状态栏
+ * @df/statusbar · 状态栏
  *
  * 插件注册状态项，组件按左右分组渲染。动态项通过 `getText` 读取最新值，
  * 与命令系统相同，界面不缓存业务状态。
  */
-import type { IDisposable, StatusBarItem } from '@desktop-framework/core'
+import type { IDisposable, StatusBarItem } from '@df/core'
 import type { Context } from 'cordis'
 import { Service } from 'cordis'
 import { ref } from 'vue'

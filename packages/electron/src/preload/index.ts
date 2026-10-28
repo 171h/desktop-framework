@@ -3,7 +3,7 @@
  *
  * 渲染进程没有 Node、没有 `ipcRenderer`，只能调用这里列出的方法。
  */
-import type { DesktopBridge, FileDialogFilter, FrameworkRuntimeInfo, OpenedFile, SaveFileRequest, TitleBarOverlayOptions, WindowControlAction, WindowState } from '@desktop-framework/core'
+import type { DesktopBridge, FileDialogFilter, FrameworkRuntimeInfo, OpenedFile, SaveFileRequest, TitleBarOverlayOptions, WindowControlAction, WindowState } from '@df/core'
 import { contextBridge, ipcRenderer } from 'electron'
 import { CHANNELS } from '../shared'
 

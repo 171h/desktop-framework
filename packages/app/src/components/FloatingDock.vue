@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { SidebarId } from '@desktop-framework/core'
-import { clamp } from '@desktop-framework/core'
-import { useCordis } from '@desktop-framework/vue'
+import type { SidebarId } from '@df/core'
+import { clamp } from '@df/core'
+import { useCordis } from '@df/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import DockPanel from './DockPanel.vue'
 

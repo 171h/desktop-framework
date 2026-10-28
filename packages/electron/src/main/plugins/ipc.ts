@@ -1,10 +1,10 @@
-import type { FileDialogFilter, SaveFileRequest, WindowControlAction } from '@desktop-framework/core'
+import type { FileDialogFilter, SaveFileRequest, WindowControlAction } from '@df/core'
 /** IPC 插件：preload 暴露的最小能力面。 */
 import type { Context } from 'cordis'
 import { readFile, stat, writeFile } from 'node:fs/promises'
 import { basename } from 'node:path'
-import { errorMessage } from '@desktop-framework/core'
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { errorMessage } from '@df/core'
+import { DisposableStore, toDisposable } from '@df/vscode'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { CHANNELS } from '../../shared'
 

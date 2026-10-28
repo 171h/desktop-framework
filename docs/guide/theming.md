@@ -23,7 +23,7 @@
 
 ## Codicon
 
-nusys-ui 的 Shadow DOM 需要宿主页面提供固定 id 的 Codicon 样式表。`@desktop-framework/ui` 通过 Vite `?url` 导入 CSS 并自动插入：
+nusys-ui 的 Shadow DOM 需要宿主页面提供固定 id 的 Codicon 样式表。`@df/ui` 通过 Vite `?url` 导入 CSS 并自动插入：
 
 ```ts
 ensureCodiconStylesheet()
@@ -63,7 +63,7 @@ ctx.ui.cycleTheme()
 当 nusys-ui 缺少能力时，优先顺序：
 
 1. 用现有组件组合（推荐）：例如应用菜单由 `vscode-button`、`vscode-toolbar-button` 与 CSS 组合。
-2. 在 `@desktop-framework/ui` 增加框架级组件，保持对 nusys-ui 的依赖。
+2. 在 `@df/ui` 增加框架级组件，保持对 nusys-ui 的依赖。
 3. 修改 submodule 中的 nusys-ui 组件，向上游提交 PR；框架侧固定对应版本。
 
 不要复制 nusys-ui 源码到业务包，也不要引入 Element Plus、Ant Design 等第二套组件。

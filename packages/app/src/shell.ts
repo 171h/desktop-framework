@@ -1,4 +1,4 @@
-import type { StartupTimer } from '@desktop-framework/vscode'
+import type { StartupTimer } from '@df/vscode'
 import type { Context } from 'cordis'
 /**
  * Vue 外壳服务。
@@ -7,8 +7,8 @@ import type { Context } from 'cordis'
  * 卸载插件会按顺序卸掉 Vue 应用，避免 HMR 或运行时插件切换留下事件监听。
  */
 import type { App as VueApp } from 'vue'
-import { errorMessage } from '@desktop-framework/core'
-import { provideFrameworkContext } from '@desktop-framework/vue'
+import { errorMessage } from '@df/core'
+import { provideFrameworkContext } from '@df/vue'
 import { Context as CordisContext, Service } from 'cordis'
 import { createApp } from 'vue'
 import AppShell from './AppShell.vue'

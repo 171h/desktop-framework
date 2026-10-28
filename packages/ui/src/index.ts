@@ -4,7 +4,7 @@ export { default as DfSlot } from './components/DfSlot.vue'
 export { default as DfSplitLayout } from './components/DfSplitLayout.vue'
 export * from './nusys'
 /**
- * @desktop-framework/ui · 界面基础层
+ * @df/ui · 界面基础层
  *
  * 所有可视组件来自 nusys-ui；本包只提供：
  * - 主题令牌与 nusys-ui 变量映射；

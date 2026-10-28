@@ -49,7 +49,7 @@ pnpm build:wasm        # wasm-release
 pnpm build:wasm:dev    # 更快，适合调试
 ```
 
-生成物写入 `packages/wasm/generated/`，由 `@desktop-framework/wasm` 静态导入。生成物提交在仓库中，因此没有 Rust 工具链的宿主也可以直接启动；CI 会重新构建验证。
+生成物写入 `packages/wasm/generated/`，由 `@df/wasm` 静态导入。生成物提交在仓库中，因此没有 Rust 工具链的宿主也可以直接启动；CI 会重新构建验证。
 
 `wasm-pack` 通过 `--no-opt` 跳过 Binaryen 下载，避免离线或受限网络环境卡住。Rust 侧已使用 `wasm-release` profile 控制体积。
 

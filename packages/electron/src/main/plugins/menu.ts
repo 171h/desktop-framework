@@ -1,7 +1,7 @@
 /** 原生菜单插件。 */
 import type { Context } from 'cordis'
 import type { MenuItemConstructorOptions } from 'electron'
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { DisposableStore, toDisposable } from '@df/vscode'
 import { app, BrowserWindow, Menu, shell } from 'electron'
 import { CHANNELS } from '../../shared'
 

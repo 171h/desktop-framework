@@ -7,11 +7,11 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@desktop-framework/electron/main": ["./packages/electron/src/main/index.ts"],
-      "@desktop-framework/electron/preload": ["./packages/electron/src/preload/index.ts"],
-      "@desktop-framework/electron/shared": ["./packages/electron/src/shared/index.ts"],
-      "@desktop-framework/electron": ["./packages/electron/src/index.ts"],
-      "@desktop-framework/*": ["./packages/*/src/index.ts"]
+      "@df/electron/main": ["./packages/electron/src/main/index.ts"],
+      "@df/electron/preload": ["./packages/electron/src/preload/index.ts"],
+      "@df/electron/shared": ["./packages/electron/src/shared/index.ts"],
+      "@df/electron": ["./packages/electron/src/index.ts"],
+      "@df/*": ["./packages/*/src/index.ts"]
     },
     "resolveJsonModule": true,
     "types": ["node", "vite/client"],

@@ -1,12 +1,12 @@
 /**
- * @desktop-framework/surface · 无限画布服务
+ * @df/surface · 无限画布服务
  *
  * 画布数据与相机状态放在服务中，视图只负责渲染与手势。插件可以调用
  * `addNode` / `moveNode` 扩展画布内容，选择状态通过全局 selection 服务共享。
  */
 import type { Context } from 'cordis'
 import type { GridMetrics } from './renderer'
-import { clamp } from '@desktop-framework/core'
+import { clamp } from '@df/core'
 import { Service } from 'cordis'
 import { computed, markRaw, reactive, ref } from 'vue'
 import SurfaceView from './SurfaceView.vue'

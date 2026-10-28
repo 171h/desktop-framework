@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/workbench",
+  "name": "@df/workbench",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -9,15 +9,15 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@desktop-framework/commands": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/settings": "workspace:*",
-    "@desktop-framework/vue": "workspace:*",
+    "@df/commands": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/settings": "workspace:*",
+    "@df/vue": "workspace:*",
     "cordis": "^4.0.0-rc.12",
     "pinia": "^4.1.0",
     "vue": "^3.5.44"
   },
   "devDependencies": {
-    "@desktop-framework/kernel": "workspace:*"
+    "@df/kernel": "workspace:*"
   }
 }

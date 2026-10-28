@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/notifications",
+  "name": "@df/notifications",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -10,8 +10,8 @@
     "./NotificationStack.vue": "./src/NotificationStack.vue"
   },
   "dependencies": {
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/vue": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/vue": "workspace:*",
     "cordis": "^4.0.0-rc.12",
     "vue": "^3.5.44"
   }

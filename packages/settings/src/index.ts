@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/settings · 本地存储
+ * @df/settings · 本地存储
  *
  * 浏览器与 Electron 渲染进程都通过 `localStorage` 持久化；在无 DOM 环境
  * （测试、Node）自动退回内存实现。键名统一带命名空间，避免多个宿主共享

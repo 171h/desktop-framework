@@ -62,7 +62,7 @@ pnpm dev:desktop    # Electron 桌面示例
 所有能力都是 Cordis 插件，并可通过 `ctx.kernel.load()` / `unload()` 在运行时增删。插件通过 `inject` 声明依赖，Cordis 负责等待、排序与资源释放。框架的内置能力也使用同一机制：
 
 ```ts
-import { definePlugin } from '@desktop-framework/kernel'
+import { definePlugin } from '@df/kernel'
 
 export default definePlugin({
   name: 'my-company:review-tools',
@@ -117,7 +117,7 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
 }
 ```
 
-应用启动时，`@desktop-framework/bootstrap` 会：
+应用启动时，`@df/bootstrap` 会：
 
 1. 计算配置的版本缓存键，并在本地缓存中查找；
 2. 未命中时从对应 commit 的 GitHub Release / 制品地址拉取运行时归档；

@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process'
 /**
  * 构建 Rust → WebAssembly。
  *
- * 输出到 `packages/wasm/generated`，与 `@desktop-framework/wasm` 的静态导入
+ * 输出到 `packages/wasm/generated`，与 `@df/wasm` 的静态导入
  * 路径一致。生成物建议提交到仓库，保证没有 Rust 工具链的宿主也能直接启动；
  * CI 会重新构建并验证一致性。
  *

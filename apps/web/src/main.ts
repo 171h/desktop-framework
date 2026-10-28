@@ -1,6 +1,6 @@
-import { createPlaygroundApp } from '@desktop-framework/playground'
+import { createPlaygroundApp } from '@df/playground'
 import 'virtual:uno.css'
-import '@desktop-framework/ui/theme.css'
+import '@df/ui/theme.css'
 
 async function boot(): Promise<void> {
   const app = await createPlaygroundApp({

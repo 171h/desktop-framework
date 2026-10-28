@@ -6,9 +6,9 @@
  * pointer 事件，因此面板在拖拽过程中从停靠 DOM 切换到浮动 DOM 也不会
  * 中断拖拽。
  */
-import type { DockSide, FloatingDockState, SidebarId } from '@desktop-framework/core'
+import type { DockSide, FloatingDockState, SidebarId } from '@df/core'
 import type { Context } from 'cordis'
-import { clamp } from '@desktop-framework/core'
+import { clamp } from '@df/core'
 import { reactive } from 'vue'
 
 export interface DockDragState {

@@ -15,7 +15,7 @@ Cordis 支持函数、类与对象插件。框架推荐对象形式，便于声�
 
 ```ts
 import type { Context } from 'cordis'
-import { definePlugin } from '@desktop-framework/kernel'
+import { definePlugin } from '@df/kernel'
 
 export const name = 'acme:review'
 export const inject = ['commands', 'workbench', 'selection']
@@ -60,7 +60,7 @@ ctx.effect(() => {
 VS Code 的 `DisposableStore` 也可直接使用：
 
 ```ts
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { DisposableStore, toDisposable } from '@df/vscode'
 
 const store = new DisposableStore()
 store.add(toDisposable(() => window.removeEventListener('resize', onResize)))

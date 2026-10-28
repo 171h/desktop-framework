@@ -1,6 +1,6 @@
 # Electron 宿主
 
-`@desktop-framework/electron` 是一个库，而不是一个写死的应用。`apps/desktop` 只提供窗口参数、渲染入口和运行时配置。
+`@df/electron` 是一个库，而不是一个写死的应用。`apps/desktop` 只提供窗口参数、渲染入口和运行时配置。
 
 ## 主进程插件
 
@@ -20,7 +20,7 @@
 使用 `vscode-instantiation` 的生命周期原语，而不是重写一套：
 
 ```ts
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { DisposableStore, toDisposable } from '@df/vscode'
 
 const store = new DisposableStore()
 store.add(toDisposable(() => app.off('activate', onActivate)))

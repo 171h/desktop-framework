@@ -1,11 +1,11 @@
 /**
- * @desktop-framework/editor · 编辑器文档标签页
+ * @df/editor · 编辑器文档标签页
  *
  * 标签页的拖拽排序、溢出滚动与键盘焦点由 nusys-ui 的 `vscode-tabs`
  * 完成（其交互参考 VS Code）；本服务补充文档生命周期、关闭/固定/脏状态、
  * 右键菜单和快捷键命令。
  */
-import type { CommandDefinition, IDisposable } from '@desktop-framework/core'
+import type { CommandDefinition, IDisposable } from '@df/core'
 import type { Context } from 'cordis'
 import type { EditorDocument, OpenDocumentOptions } from './types'
 import { Service } from 'cordis'

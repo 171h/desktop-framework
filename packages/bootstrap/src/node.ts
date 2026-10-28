@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/bootstrap/node · 运行时解析与缓存
+ * @df/bootstrap/node · 运行时解析与缓存
  *
  * 流程：
  * 1. 读取 `desktop-framework.config.json`；

@@ -1,10 +1,10 @@
 /**
- * @desktop-framework/bootstrap · 运行时配置
+ * @df/bootstrap · 运行时配置
  *
  * 使用方在 `desktop-framework.config.json` 中声明框架仓库与精确 commit。
  * 运行时解析器根据配置查找缓存或拉取对应 commit 的制品，校验后加载。
  */
-import type { RuntimeMode } from '@desktop-framework/core'
+import type { RuntimeMode } from '@df/core'
 
 /** 配置模式；`auto` 在远程不可用时回退本地/内置版本。 */
 export type FrameworkRuntimeMode = 'workspace' | 'remote' | 'auto'

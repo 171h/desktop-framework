@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { EditorDocument } from './types'
-import { useCordis } from '@desktop-framework/vue'
+import { useCordis } from '@df/vue'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 const ctx = useCordis()

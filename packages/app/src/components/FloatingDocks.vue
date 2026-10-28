@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { SidebarId } from '@desktop-framework/core'
-import { useCordis } from '@desktop-framework/vue'
+import type { SidebarId } from '@df/core'
+import { useCordis } from '@df/vue'
 import { computed, ref } from 'vue'
 import FloatingDock from './FloatingDock.vue'
 

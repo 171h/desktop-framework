@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/app-desktop",
+  "name": "@df/app-desktop",
   "version": "0.1.0",
   "private": true,
   "description": "Electron 桌面示例应用：配置安全窗口、运行时拉取与 electron-builder 跨平台安装包，同时复用插件实验室进行端到端验证",
@@ -11,14 +11,14 @@
     "dist": "electron-vite build && electron-builder"
   },
   "dependencies": {
-    "@desktop-framework/bootstrap": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/electron": "workspace:*",
-    "@desktop-framework/kernel": "workspace:*",
-    "@desktop-framework/platform": "workspace:*",
-    "@desktop-framework/playground": "workspace:*",
-    "@desktop-framework/ui": "workspace:*",
-    "@desktop-framework/vscode": "workspace:*",
+    "@df/bootstrap": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/electron": "workspace:*",
+    "@df/kernel": "workspace:*",
+    "@df/platform": "workspace:*",
+    "@df/playground": "workspace:*",
+    "@df/ui": "workspace:*",
+    "@df/vscode": "workspace:*",
     "electron": "^45.0.0"
   },
   "devDependencies": {

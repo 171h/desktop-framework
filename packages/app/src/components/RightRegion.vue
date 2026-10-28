@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { SidebarId } from '@desktop-framework/core'
-import { DfSplitLayout } from '@desktop-framework/ui'
-import { useCordis } from '@desktop-framework/vue'
+import type { SidebarId } from '@df/core'
+import { DfSplitLayout } from '@df/ui'
+import { useCordis } from '@df/vue'
 import { computed } from 'vue'
 import BottomRegion from './BottomRegion.vue'
 import DockPanel from './DockPanel.vue'

@@ -1,16 +1,16 @@
 /**
- * @desktop-framework/app · 框架装配入口
+ * @df/app · 框架装配入口
  *
  * 宿主只需要声明挂载节点、标题与额外插件。默认预设包含完整工作台；传入
  * `include` / `exclude` 可以裁剪能力，`plugins` 用于追加业务插件。
  */
-import type { PluginEntry } from '@desktop-framework/core'
+import type { PluginEntry } from '@df/core'
 import type { PresetOptions } from './preset'
-import { createFrameworkContext, detectEnvironment, pluginEntry } from '@desktop-framework/kernel'
-import { StartupTimer } from '@desktop-framework/vscode'
+import { createFrameworkContext, detectEnvironment, pluginEntry } from '@df/kernel'
+import { StartupTimer } from '@df/vscode'
 import { createDefaultPreset, defaultPreset } from './preset'
 import { createShellPlugin } from './shell'
-import '@desktop-framework/ui/theme.css'
+import '@df/ui/theme.css'
 
 export { default as AppShell } from './AppShell.vue'
 export * from './commands'

@@ -1,17 +1,17 @@
-import type { ResolvedRuntime } from '@desktop-framework/bootstrap/node'
+import type { ResolvedRuntime } from '@df/bootstrap/node'
 /**
  * 主进程共享状态服务。
  *
  * 所有 Electron 插件通过 Cordis 依赖注入读取同一个 Host 服务，避免模块级
  * 可变单例；窗口、运行时与就绪状态都集中在这里，卸载时按依赖逆序释放。
  */
-import type { FrameworkRuntimeInfo, WindowState } from '@desktop-framework/core'
+import type { FrameworkRuntimeInfo, WindowState } from '@df/core'
 import type { Context } from 'cordis'
 import type { BrowserWindow } from 'electron'
 import type { ElectronHostOptions } from '../shared'
-import { shortCommit } from '@desktop-framework/bootstrap'
-import { createDeferred } from '@desktop-framework/core'
-import { StartupTimer } from '@desktop-framework/vscode'
+import { shortCommit } from '@df/bootstrap'
+import { createDeferred } from '@df/core'
+import { StartupTimer } from '@df/vscode'
 import { Service } from 'cordis'
 
 declare module 'cordis' {

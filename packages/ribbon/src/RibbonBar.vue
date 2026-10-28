@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import DfRibbon from '@desktop-framework/ui/components/DfRibbon.vue'
-import { useCordis } from '@desktop-framework/vue'
+import DfRibbon from '@df/ui/components/DfRibbon.vue'
+import { useCordis } from '@df/vue'
 import { watch } from 'vue'
 
 const ctx = useCordis()

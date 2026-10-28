@@ -1,5 +1,5 @@
-import { apply as commandsPlugin } from '@desktop-framework/commands'
-import { createFrameworkContext } from '@desktop-framework/kernel'
+import { apply as commandsPlugin } from '@df/commands'
+import { createFrameworkContext } from '@df/kernel'
 import { describe, expect, it } from 'vitest'
 import {
   isEditableTarget,

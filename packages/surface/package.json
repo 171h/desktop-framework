@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/surface",
+  "name": "@df/surface",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -10,13 +10,13 @@
     "./SurfaceView.vue": "./src/SurfaceView.vue"
   },
   "dependencies": {
-    "@desktop-framework/commands": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/editor": "workspace:*",
-    "@desktop-framework/selection": "workspace:*",
-    "@desktop-framework/statusbar": "workspace:*",
-    "@desktop-framework/ui": "workspace:*",
-    "@desktop-framework/vue": "workspace:*",
+    "@df/commands": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/editor": "workspace:*",
+    "@df/selection": "workspace:*",
+    "@df/statusbar": "workspace:*",
+    "@df/ui": "workspace:*",
+    "@df/vue": "workspace:*",
     "cordis": "^4.0.0-rc.12",
     "vue": "^3.5.44"
   }

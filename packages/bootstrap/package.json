@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/bootstrap",
+  "name": "@df/bootstrap",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -10,7 +10,7 @@
     "./node": "./src/node.ts"
   },
   "dependencies": {
-    "@desktop-framework/core": "workspace:*",
+    "@df/core": "workspace:*",
     "tar": "^7.5.22"
   }
 }

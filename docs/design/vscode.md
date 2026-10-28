@@ -9,10 +9,10 @@
 - `mark` / `getMarks` performance marks
 
 ```ts
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { DisposableStore, toDisposable } from '@df/vscode'
 ```
 
-`@desktop-framework/vscode` 是唯一适配层。以后该 npm 包补齐能力时，只需替换这个包的导出，不影响业务插件。
+`@df/vscode` 是唯一适配层。以后该 npm 包补齐能力时，只需替换这个包的导出，不影响业务插件。
 
 ## packages/vscode 的定位
 
@@ -27,7 +27,7 @@ import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
 
 ## 编辑器标签页
 
-主工作区的文档标签栏复用 nusys-ui 的 `vscode-tabs` / `vscode-tab-header`，保留 VS Code 的拖拽排序、溢出滚动与键盘焦点行为。`@desktop-framework/editor` 在其上补充：
+主工作区的文档标签栏复用 nusys-ui 的 `vscode-tabs` / `vscode-tab-header`，保留 VS Code 的拖拽排序、溢出滚动与键盘焦点行为。`@df/editor` 在其上补充：
 
 - 文档生命周期与 `KeepAlive` 内容缓存；
 - 关闭按钮、中键关闭、右键菜单；

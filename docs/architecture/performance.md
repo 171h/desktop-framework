@@ -14,7 +14,7 @@
 
 ## 渲染
 
-`@desktop-framework/surface` 采用：
+`@df/surface` 采用：
 
 - WebGL2 单次 draw call 绘制无限网格与轴向；
 - 节点卡片使用 CSS transform 合成，文本保持系统字体清晰度；

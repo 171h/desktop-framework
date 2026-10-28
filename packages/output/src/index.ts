@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/output · 输出面板
+ * @df/output · 输出面板
  */
 import type { Context } from 'cordis'
 import { markRaw } from 'vue'

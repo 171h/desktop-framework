@@ -1,11 +1,11 @@
 /**
- * @desktop-framework/wasm · WASM 热路径
+ * @df/wasm · WASM 热路径
  *
  * 命令面板在候选很多时调用 Rust 模糊搜索；WASM 未构建、加载失败或运行在
  * 测试环境时自动退回等价的 TypeScript 实现，保证框架仍可启动。
  */
 import type { Context } from 'cordis'
-import { errorMessage } from '@desktop-framework/core'
+import { errorMessage } from '@df/core'
 import { Service } from 'cordis'
 import { ref } from 'vue'
 // 生成物由 `pnpm build:wasm` 输出；提交生成物以便无 Rust 环境也能启动。

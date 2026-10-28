@@ -1,7 +1,7 @@
 /**
  * UI 服务：主题、槽位与对话框。
  */
-import type { IDisposable, ThemeId } from '@desktop-framework/core'
+import type { IDisposable, ThemeId } from '@df/core'
 import type { Context } from 'cordis'
 import type { PromptOptions, PromptState, UiSlotContribution } from './types'
 import { Service } from 'cordis'

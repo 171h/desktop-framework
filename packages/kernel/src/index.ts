@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/kernel · Cordis 内核
+ * @df/kernel · Cordis 内核
  *
  * 内核保持“薄”：只创建根上下文、加载/卸载插件并记录诊断。业务能力全部由
  * 插件提供，内核不依赖 Vue、DOM、Electron 或 WASM。
@@ -11,9 +11,9 @@ import type {
   KernelServiceContract,
   PluginEntry,
   PluginSource,
-} from '@desktop-framework/core'
+} from '@df/core'
 import type { Context, Fiber, Plugin } from 'cordis'
-import { errorMessage } from '@desktop-framework/core'
+import { errorMessage } from '@df/core'
 import { Context as CordisContext, Service } from 'cordis'
 
 /** 框架版本，与根 package.json 同步维护。 */

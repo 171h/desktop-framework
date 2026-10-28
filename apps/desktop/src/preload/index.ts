@@ -1,1 +1,1 @@
-import '@desktop-framework/electron/preload'
+import '@df/electron/preload'

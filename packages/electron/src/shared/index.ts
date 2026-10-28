@@ -1,5 +1,5 @@
 /** Electron 主进程 / preload / 渲染进程共享的通道和配置类型。 */
-import type { PluginEntry, WindowState } from '@desktop-framework/core'
+import type { PluginEntry, WindowState } from '@df/core'
 import type { BrowserWindowConstructorOptions, MenuItemConstructorOptions } from 'electron'
 
 /** IPC 通道。 */
@@ -72,7 +72,7 @@ export interface ElectronHostOptions {
 export interface ElectronHost {
   ctx: import('cordis').Context
   window?: import('electron').BrowserWindow
-  runtime?: import('@desktop-framework/core').FrameworkRuntimeInfo
+  runtime?: import('@df/core').FrameworkRuntimeInfo
   dispose: () => Promise<void>
 }
 

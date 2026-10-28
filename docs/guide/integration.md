@@ -85,7 +85,7 @@ Electron 主进程通过 `bootstrapElectron` 启动：
 
 ```ts
 import { join } from 'node:path'
-import { bootstrapElectron } from '@desktop-framework/electron/main'
+import { bootstrapElectron } from '@df/electron/main'
 import { app } from 'electron'
 
 bootstrapElectron({
@@ -128,7 +128,7 @@ if (runtime?.mode === 'remote' && runtime.entryUrl) {
 }
 ```
 
-如果远程不可用，加载宿主自带的 `@desktop-framework/app` 即可。
+如果远程不可用，加载宿主自带的 `@df/app` 即可。
 
 ## 本地开发与生产
 
@@ -139,7 +139,7 @@ if (runtime?.mode === 'remote' && runtime.entryUrl) {
 业务能力仍然通过插件接入，不修改框架内部：
 
 ```ts
-import { definePlugin } from '@desktop-framework/kernel'
+import { definePlugin } from '@df/kernel'
 
 export default definePlugin({
   name: 'acme:review',

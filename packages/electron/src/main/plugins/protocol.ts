@@ -1,7 +1,7 @@
 /** df-app 协议：生产环境下安全加载渲染进程。 */
 import type { Context } from 'cordis'
 import { dirname } from 'node:path'
-import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
+import { DisposableStore, toDisposable } from '@df/vscode'
 import { protocol } from 'electron'
 import { serveFile } from '../static'
 

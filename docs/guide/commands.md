@@ -65,7 +65,7 @@ ribbon: {
 
 ## 快捷键
 
-- 绑定由 `@desktop-framework/keybindings` 统一解析。
+- 绑定由 `@df/keybindings` 统一解析。
 - 命令注册时带 `keybinding`，快捷键服务会自动建立绑定，并在命令注销时清理。
 - 输入框、文本域、`contenteditable` 内默认不触发无修饰键的快捷键。
 - macOS 上显示为 `⌘`、`⌥`、`⌃`、`⇧`；其他平台显示 `Ctrl+Alt+...`。

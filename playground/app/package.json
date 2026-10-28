@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/playground",
+  "name": "@df/playground",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -9,15 +9,15 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@desktop-framework/app": "workspace:*",
-    "@desktop-framework/commands": "workspace:*",
-    "@desktop-framework/core": "workspace:*",
-    "@desktop-framework/kernel": "workspace:*",
-    "@desktop-framework/notifications": "workspace:*",
-    "@desktop-framework/surface": "workspace:*",
-    "@desktop-framework/ui": "workspace:*",
-    "@desktop-framework/vue": "workspace:*",
-    "@desktop-framework/workbench": "workspace:*",
+    "@df/app": "workspace:*",
+    "@df/commands": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/kernel": "workspace:*",
+    "@df/notifications": "workspace:*",
+    "@df/surface": "workspace:*",
+    "@df/ui": "workspace:*",
+    "@df/vue": "workspace:*",
+    "@df/workbench": "workspace:*",
     "cordis": "^4.0.0-rc.12",
     "vue": "^3.5.44"
   }

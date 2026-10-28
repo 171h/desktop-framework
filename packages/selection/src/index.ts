@@ -1,5 +1,5 @@
 /**
- * @desktop-framework/selection · 通用选择状态
+ * @df/selection · 通用选择状态
  *
  * 选择对象由 `kind` 与 `id` 标识，`data` 为插件私有的只读载荷。资源树、
  * 画布、属性面板通过该服务协同，不直接互相依赖。

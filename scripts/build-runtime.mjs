@@ -35,7 +35,7 @@ function run(command, args, cwd = root) {
   }
 }
 
-run('pnpm', ['--filter', '@desktop-framework/runtime', 'build'])
+run('pnpm', ['--filter', '@df/runtime', 'build'])
 
 const commitArgIndex = process.argv.indexOf('--commit')
 const commit = commitArgIndex >= 0

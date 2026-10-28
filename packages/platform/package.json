@@ -1,5 +1,5 @@
 {
-  "name": "@desktop-framework/platform",
+  "name": "@df/platform",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@desktop-framework/core": "workspace:*",
+    "@df/core": "workspace:*",
     "cordis": "^4.0.0-rc.12"
   }
 }

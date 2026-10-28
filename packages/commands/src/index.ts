@@ -1,12 +1,12 @@
 /**
- * @desktop-framework/commands · 命令注册表
+ * @df/commands · 命令注册表
  *
  * Ribbon、应用菜单、快速访问工具栏、快捷键与命令面板都只引用命令 id。
  * 命令状态使用惰性函数，界面在每次构建时读取最新值。
  */
-import type { CommandDefinition, IDisposable } from '@desktop-framework/core'
+import type { CommandDefinition, IDisposable } from '@df/core'
 import type { Context } from 'cordis'
-import { errorMessage } from '@desktop-framework/core'
+import { errorMessage } from '@df/core'
 import { Service } from 'cordis'
 import { markRaw, reactive } from 'vue'
 

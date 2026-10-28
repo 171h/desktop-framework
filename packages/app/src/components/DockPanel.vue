@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { DockSide, SidebarId } from '@desktop-framework/core'
-import { clamp } from '@desktop-framework/core'
-import { useCordis } from '@desktop-framework/vue'
+import type { DockSide, SidebarId } from '@df/core'
+import { clamp } from '@df/core'
+import { useCordis } from '@df/vue'
 import { computed, ref } from 'vue'
 import { startDockDrag } from '../dock-drag'
 

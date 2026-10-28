@@ -4,13 +4,13 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import UnoCSS from 'unocss/vite'
 
 const frameworkPackages = [
-  '@desktop-framework/core',
-  '@desktop-framework/kernel',
-  '@desktop-framework/vscode',
-  '@desktop-framework/electron',
-  '@desktop-framework/bootstrap',
-  '@desktop-framework/platform',
-  '@desktop-framework/playground',
+  '@df/core',
+  '@df/kernel',
+  '@df/vscode',
+  '@df/electron',
+  '@df/bootstrap',
+  '@df/platform',
+  '@df/playground',
   'cordis',
   'cosmokit',
   'vscode-instantiation',

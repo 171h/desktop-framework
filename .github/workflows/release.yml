@@ -85,7 +85,7 @@ jobs:
       - name: Build Electron
         run: pnpm build:desktop
       - name: Package
-        run: pnpm --filter @desktop-framework/app-desktop exec electron-builder --publish never
+        run: pnpm --filter @df/app-desktop exec electron-builder --publish never
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}

@@ -1,5 +1,5 @@
 import { join, resolve } from 'node:path'
-import { bootstrapElectron, showStartupError } from '@desktop-framework/electron/main'
+import { bootstrapElectron, showStartupError } from '@df/electron/main'
 import { app } from 'electron'
 
 const configPath = process.env.DF_RUNTIME_CONFIG

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { DfSplitLayout } from '@desktop-framework/ui'
-import { useCordis } from '@desktop-framework/vue'
+import { DfSplitLayout } from '@df/ui'
+import { useCordis } from '@df/vue'
 import { computed } from 'vue'
 import DockPanel from './DockPanel.vue'
 import MainRegion from './MainRegion.vue'

@@ -1,5 +1,5 @@
 import type { StorageLike } from '../src'
-import { createFrameworkContext } from '@desktop-framework/kernel'
+import { createFrameworkContext } from '@df/kernel'
 import { describe, expect, it } from 'vitest'
 import { apply as settingsPlugin, StorageService } from '../src'
 

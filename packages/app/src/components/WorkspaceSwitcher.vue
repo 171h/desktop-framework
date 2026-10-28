@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { errorMessage } from '@desktop-framework/core'
-import { useCordis } from '@desktop-framework/vue'
+import { errorMessage } from '@df/core'
+import { useCordis } from '@df/vue'
 import { computed, nextTick, ref, watch } from 'vue'
 
 const ctx = useCordis()

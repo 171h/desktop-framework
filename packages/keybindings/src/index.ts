@@ -1,11 +1,11 @@
 /**
- * @desktop-framework/keybindings · 快捷键服务
+ * @df/keybindings · 快捷键服务
  *
  * 绑定以规范化字符串保存，例如 `Ctrl+Shift+P`。`Mod` 会根据平台解析为
  * `Meta`（macOS）或 `Ctrl`（Windows/Linux），因此命令定义可以跨平台复用。
  * 命令注册时若带 `keybinding`，本服务会自动建立绑定。
  */
-import type { CommandDefinition, IDisposable } from '@desktop-framework/core'
+import type { CommandDefinition, IDisposable } from '@df/core'
 import type { Context } from 'cordis'
 import { Service } from 'cordis'
 

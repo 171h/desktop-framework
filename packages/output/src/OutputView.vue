@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useCordis } from '@desktop-framework/vue'
+import { useCordis } from '@df/vue'
 
 interface LogEntry {
   id: number

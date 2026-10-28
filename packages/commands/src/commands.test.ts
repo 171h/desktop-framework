@@ -1,4 +1,4 @@
-import { createFrameworkContext } from '@desktop-framework/kernel'
+import { createFrameworkContext } from '@df/kernel'
 import { describe, expect, it } from 'vitest'
 import { CommandService, apply as commandsPlugin } from '../src'
 

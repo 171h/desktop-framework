@@ -9,8 +9,8 @@
  */
 import type { Context } from 'cordis'
 import type { ElectronHost, ElectronHostOptions } from '../shared'
-import { errorMessage } from '@desktop-framework/core'
-import { createFrameworkContext, pluginEntry } from '@desktop-framework/kernel'
+import { errorMessage } from '@df/core'
+import { createFrameworkContext, pluginEntry } from '@df/kernel'
 import { app, crashReporter, dialog, protocol } from 'electron'
 import * as ipcPlugin from './plugins/ipc'
 import * as lifecyclePlugin from './plugins/lifecycle'

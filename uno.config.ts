@@ -9,7 +9,7 @@ import {
 /**
  * 全仓库共用的 UnoCSS 配置。
  *
- * 组件视觉变量来自 `@desktop-framework/ui/theme.css`，UnoCSS 只负责布局与
+ * 组件视觉变量来自 `@df/ui/theme.css`，UnoCSS 只负责布局与
  * 间距等原子类，避免主题颜色散落在模板中。
  */
 export default defineConfig({

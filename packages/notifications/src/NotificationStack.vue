@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useCordis } from '@desktop-framework/vue'
+import { useCordis } from '@df/vue'
 
 const ctx = useCordis()
 const icons: Record<string, string> = {

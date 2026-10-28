@@ -1,14 +1,14 @@
 /**
- * @desktop-framework/ribbon · 命令驱动的功能区
+ * @df/ribbon · 命令驱动的功能区
  *
  * 插件只需在命令上声明 `ribbon` 放置信息。服务根据命令注册表实时构建
  * `vscode-ribbon` 的 `tabs` 数据；按钮的启用、勾选和快捷键状态都是惰性
  * 求值，因此无需手工同步 UI 状态。
  */
-import type { CommandDefinition, IDisposable, RibbonPlacement, RibbonTabDefinition, RibbonTabPlacement } from '@desktop-framework/core'
+import type { CommandDefinition, IDisposable, RibbonPlacement, RibbonTabDefinition, RibbonTabPlacement } from '@df/core'
 import type { Context } from 'cordis'
 import type { VscRibbonGroup, VscRibbonItem, VscRibbonTab } from 'nusys-ui'
-import { errorMessage } from '@desktop-framework/core'
+import { errorMessage } from '@df/core'
 import { Service } from 'cordis'
 import { ref } from 'vue'
 
