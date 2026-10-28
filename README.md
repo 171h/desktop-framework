@@ -85,7 +85,7 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
 
 ### Rust / WASM 热路径
 
-`df_fuzzy` 提供模糊匹配内核；`df_wasm` 通过 JSON 暴露给前端。当前调用仍在渲染主线程执行；WASM 不可用时使用 TypeScript 降级搜索。大型数据负载还需要基准测试及 Worker 调度，详见架构审查中的性能边界。
+`df_fuzzy` 提供模糊匹配内核；`df_wasm` 通过 JSON 暴露给前端。当前调用仍在渲染主线程执行；WASM 不可用时使用 TypeScript 降级搜索。大型数据负载还需要基准测试及 Worker 调度，详见[性能策略](./docs/architecture/performance.md)。
 
 ### 借鉴 VS Code 的实现
 
@@ -130,7 +130,6 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
 
 ## 文档
 
-- [架构审查与调整](./docs/architecture/review.md)：已修复的问题、宿主扩展方式与当前能力边界。
 - [架构总览](./docs/architecture/overview.md)
 - [AutoDesk 设计借鉴](./docs/design/autodesk.md)
 - [插件系统](./docs/guide/plugins.md)

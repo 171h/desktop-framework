@@ -24,6 +24,7 @@ export default antfu({
     '**/coverage/**',
     'submodules/**',
     'target/**',
+    'tmp/**',
     'crates/**/pkg/**',
     'packages/wasm/generated/**',
     'docs/.vitepress/cache/**',
