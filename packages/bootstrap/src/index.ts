@@ -71,6 +71,15 @@ export interface RuntimeManifest {
 export const DEFAULT_ENTRY = 'index.js'
 export const DEFAULT_STYLE = 'style.css'
 
+/** 制品路径必须在所有宿主平台上都是归档内的相对路径。 */
+export function validateRuntimePath(value: unknown): string {
+  if (typeof value !== 'string' || !value || /[\\:\0]/.test(value)
+    || value.startsWith('/') || value.split('/').includes('..')) {
+    throw new TypeError('运行时路径必须是归档内的相对路径')
+  }
+  return value
+}
+
 /** 规范化仓库地址。 */
 export function normalizeRepository(repository: string): string {
   return repository
@@ -113,17 +122,22 @@ export function parseFrameworkConfig(value: unknown): FrameworkConfigFile {
   if (typeof framework.repository !== 'string' || !/^https?:\/\//.test(framework.repository)) {
     throw new TypeError('framework.repository 必须是 http(s) 仓库地址')
   }
-  if (typeof framework.commit !== 'string' || framework.commit.length < 7) {
+  if (typeof framework.commit !== 'string' || !/^[\da-f]{7,40}$/i.test(framework.commit)) {
     throw new TypeError('framework.commit 必须是完整 commit 或至少 7 位短哈希')
   }
   const mode = framework.mode ?? 'auto'
   if (!['workspace', 'remote', 'auto'].includes(mode)) {
     throw new TypeError(`未知的 framework.mode：${mode}`)
   }
+  validateRuntimePath(framework.entry ?? DEFAULT_ENTRY)
+  if (framework.timeoutMs !== undefined && (!Number.isFinite(framework.timeoutMs) || framework.timeoutMs <= 0)) {
+    throw new TypeError('framework.timeoutMs 必须是正数')
+  }
   return {
     ...file,
     framework: {
       ...framework,
+      commit: framework.commit.toLowerCase(),
       mode,
       entry: framework.entry ?? DEFAULT_ENTRY,
       cache: framework.cache !== false,

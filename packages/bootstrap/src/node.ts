@@ -13,18 +13,18 @@
  */
 import type { FrameworkConfigFile, FrameworkRuntimeConfig, ResolvedRuntime, RuntimeManifest } from './index'
 import { Buffer } from 'node:buffer'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
-import { dirname, join, normalize, sep } from 'node:path'
+import { mkdir, readFile, realpath, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { dirname, join, resolve, sep } from 'node:path'
 import { Readable } from 'node:stream'
 import * as tar from 'tar'
 import {
   DEFAULT_ENTRY,
-  DEFAULT_STYLE,
   normalizeRepository,
   parseFrameworkConfig,
   resolveArtifactUrl,
+  validateRuntimePath,
 } from './index'
 
 export type { FrameworkConfigFile, FrameworkRuntimeConfig, ResolvedRuntime, RuntimeManifest } from './index'
@@ -34,7 +34,7 @@ export interface RuntimeResolverOptions {
   cacheDir: string
   /** 自定义 fetch（Electron 可传 net.fetch）。 */
   fetch?: typeof fetch
-  /** 离线模式，直接回退 workspace。 */
+  /** 离线模式：优先缓存，未命中时按配置回退或报错。 */
   offline?: boolean
   /** 日志。 */
   logger?: (level: 'info' | 'warn' | 'error', message: string) => void
@@ -59,7 +59,7 @@ export class RuntimeResolver {
 
   /** 解析运行时。 */
   async resolve(file: FrameworkConfigFile): Promise<ResolvedRuntime> {
-    const config = file.framework
+    const config = parseFrameworkConfig(file).framework
     const base: ResolvedRuntime = {
       mode: 'workspace',
       repository: normalizeRepository(config.repository),
@@ -68,9 +68,6 @@ export class RuntimeResolver {
     }
     if (config.mode === 'workspace') {
       return base
-    }
-    if (this.options.offline) {
-      return this.fallback(config, '离线模式已启用')
     }
     try {
       return await this.resolveRemote(config)
@@ -89,7 +86,8 @@ export class RuntimeResolver {
 
   /** 清空某个版本的缓存。 */
   async clear(config: FrameworkRuntimeConfig): Promise<void> {
-    await rm(this.cacheDirectory(config), { recursive: true, force: true })
+    const validated = parseFrameworkConfig({ framework: config }).framework
+    await rm(this.cacheDirectory(validated), { recursive: true, force: true })
   }
 
   private fallback(config: FrameworkRuntimeConfig, reason: string): ResolvedRuntime {
@@ -110,12 +108,16 @@ export class RuntimeResolver {
       return this.toResolved(config, directory, manifest, true)
     }
 
+    if (this.options.offline) {
+      throw new Error('离线模式已启用，且没有可用的运行时缓存')
+    }
+
     const url = resolveArtifactUrl(config)
     this.logger('info', `[bootstrap] 拉取运行时：${url}`)
     const archive = await this.download(config, url)
     const integrity = await verifyIntegrity(archive, config.artifact?.integrity)
-    const staging = `${directory}.staging-${Date.now()}`
-    const work = `${directory}.extract-${Date.now()}`
+    const staging = `${directory}.staging-${randomUUID()}`
+    const work = `${directory}.extract-${randomUUID()}`
     await mkdir(join(work, 'content'), { recursive: true })
     await mkdir(dirname(directory), { recursive: true })
     const archivePath = join(work, 'runtime.tar.gz')
@@ -130,8 +132,8 @@ export class RuntimeResolver {
           if ('type' in entry && entry.type !== 'File' && entry.type !== 'Directory') {
             return false
           }
-          const normalized = normalize(path)
-          return !normalized.startsWith('..') && !normalized.startsWith(sep) && !normalized.includes(`${sep}..${sep}`)
+          validateRuntimePath(path)
+          return true
         },
       })
       const content = join(work, 'content')
@@ -148,6 +150,7 @@ export class RuntimeResolver {
     }
     finally {
       await rm(work, { recursive: true, force: true }).catch(() => {})
+      await rm(staging, { recursive: true, force: true }).catch(() => {})
     }
   }
 
@@ -156,16 +159,7 @@ export class RuntimeResolver {
       return null
     }
     try {
-      const manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8')) as RuntimeManifest
-      if (!commitMatches(manifest.commit, config.commit)) {
-        this.logger('warn', '[bootstrap] 缓存 commit 不匹配，重新拉取')
-        return null
-      }
-      const entry = manifest.entry || config.entry || DEFAULT_ENTRY
-      if (!existsSync(join(directory, entry))) {
-        return null
-      }
-      return { ...manifest, entry }
+      return await this.readManifest(directory, config)
     }
     catch {
       return null
@@ -187,19 +181,22 @@ export class RuntimeResolver {
       if (!commitMatches(manifest.commit, config.commit)) {
         throw new Error(`运行时 commit ${manifest.commit} 与配置 ${config.commit} 不一致`)
       }
+      await this.validateFile(directory, manifest.entry)
+      if (manifest.style !== undefined) {
+        await this.validateFile(directory, manifest.style)
+      }
       return manifest
     }
-    if (existsSync(join(directory, config.entry ?? DEFAULT_ENTRY))) {
-      // 兼容手工构建：没有 manifest 时只校验入口存在。
-      return {
-        commit: config.commit,
-        entry: config.entry ?? DEFAULT_ENTRY,
-        style: existsSync(join(directory, DEFAULT_STYLE))
-          ? DEFAULT_STYLE
-          : undefined,
-      }
-    }
     return null
+  }
+
+  private async validateFile(directory: string, value: unknown): Promise<void> {
+    const path = validateRuntimePath(value)
+    const root = await realpath(directory)
+    const target = await realpath(resolve(directory, path))
+    if (!target.startsWith(root + sep) || !(await stat(target)).isFile()) {
+      throw new Error(`运行时文件不在缓存目录内：${path}`)
+    }
   }
 
   private toResolved(
@@ -248,10 +245,15 @@ export class RuntimeResolver {
 
   private cacheDirectory(config: FrameworkRuntimeConfig): string {
     const repoHash = createHash('sha256')
-      .update(normalizeRepository(config.repository))
+      .update(JSON.stringify([
+        normalizeRepository(config.repository),
+        resolveArtifactUrl(config),
+        config.entry ?? DEFAULT_ENTRY,
+        config.artifact?.integrity ?? '',
+      ]))
       .digest('hex')
       .slice(0, 8)
-    return join(this.options.cacheDir, `${config.commit.slice(0, 16)}-${repoHash}`)
+    return join(this.options.cacheDir, `${config.commit}-${repoHash}`)
   }
 }
 
@@ -302,7 +304,8 @@ function commitMatches(actual: string, expected: string): boolean {
   if (!actual || !expected) {
     return false
   }
-  return actual === expected || actual.startsWith(expected) || expected.startsWith(actual)
+  return typeof actual === 'string' && /^[\da-f]{40}$/i.test(actual)
+    && actual.toLowerCase().startsWith(expected.toLowerCase())
 }
 
 /** 供 Node 流式下载时使用（当前实现采用 Web Response，保留导出便于测试）。 */
