@@ -86,15 +86,43 @@ export class KernelService extends Service implements KernelServiceContract {
       ids.add(id)
     }
     const records = entries.map(entry => this.register(entry))
-    await Promise.all(records.map(async (record) => {
-      try {
-        await record.fiber?.await()
-        this.syncStatus(record)
+    // apply() 可以创建子插件；等待依赖激活的整个子树稳定，而非只等顶层 fiber。
+    const owners = new Map(records.flatMap(record => record.fiber
+      ? [
+          [record.fiber, record] as const,
+        ]
+      : []))
+    const ownerOf = (fiber: Fiber): KernelRecord | undefined => {
+      let current = fiber
+      while (current.runtime) {
+        const owner = owners.get(current)
+        if (owner)
+          return owner
+        const parent = current.parent.fiber
+        if (parent === current)
+          break
+        current = parent
       }
-      catch (error) {
-        this.fail(record, error)
-      }
-    }))
+    }
+    while (true) {
+      const fibers = [
+        ...this.ctx.registry.values(),
+      ].flatMap(runtime => [...runtime.fibers]).filter(fiber => ownerOf(fiber))
+      await Promise.all(fibers.map(async (fiber) => {
+        try {
+          await fiber.await()
+        }
+        catch (error) {
+          this.fail(ownerOf(fiber)!, error)
+        }
+      }))
+      const current = [
+        ...this.ctx.registry.values(),
+      ].flatMap(runtime => [...runtime.fibers]).filter(fiber => ownerOf(fiber))
+      if (current.every(fiber => fibers.includes(fiber) && !fiber.inertia))
+        break
+    }
+    records.forEach(record => this.syncStatus(record))
     const result = records.map(record => ({ ...record.info }))
     const failed = result.find(info => info.status === 'failed')
     if (failed && this.options.strict) {

@@ -6,7 +6,7 @@ import type { Context } from 'cordis'
  * 外壳本身也是插件：它挂载 AppShell，并把 Cordis 上下文注入 Vue 组件树。
  * 卸载插件会按顺序卸掉 Vue 应用，避免 HMR 或运行时插件切换留下事件监听。
  */
-import type { App as VueApp } from 'vue'
+import type { Component, App as VueApp } from 'vue'
 import { errorMessage } from '@df/core'
 import { provideFrameworkContext } from '@df/vue'
 import { Context as CordisContext, Service } from 'cordis'
@@ -23,6 +23,10 @@ export interface ShellConfig {
   el: string | HTMLElement
   title: string
   startup?: StartupTimer
+  /** 替换工作台外壳，便于宿主提供精简或专用界面。 */
+  component?: Component
+  /** 自定义外壳所需服务；Pinia 与内核始终保留。 */
+  inject?: string[]
 }
 
 export class ShellService extends Service {
@@ -30,12 +34,14 @@ export class ShellService extends Service {
   private vueApp?: VueApp
   private readonly mountTarget: string | HTMLElement
   private readonly startup?: StartupTimer
+  private readonly component: Component
 
   constructor(ctx: Context, config: ShellConfig) {
     super(ctx, 'shell')
     this.title = config.title
     this.mountTarget = config.el
     this.startup = config.startup
+    this.component = config.component ?? AppShell
     ctx.effect(() => () => this.unmount(), 'shell:unmount')
     this.mount()
   }
@@ -56,7 +62,7 @@ export class ShellService extends Service {
     if (!target) {
       throw new Error(`找不到挂载节点 ${String(this.mountTarget)}`)
     }
-    const app = createApp(AppShell)
+    const app = createApp(this.component)
     app.config.performance = true
     app.config.errorHandler = (error, _instance, info) => {
       console.error(`[shell] ${info}`, error)
@@ -71,7 +77,13 @@ export class ShellService extends Service {
     const rootContext = (this.ctx as unknown as Record<PropertyKey, unknown>)[CordisContext.root] as Context | undefined
     provideFrameworkContext(app, rootContext ?? this.ctx)
     this.vueApp = app
-    app.mount(target)
+    try {
+      app.mount(target)
+    }
+    catch (error) {
+      this.unmount()
+      throw error
+    }
     document.title = this.title
     this.startup?.mark('shell-mounted')
     console.info('[shell] mounted')
@@ -97,25 +109,29 @@ export function createShellPlugin(config: ShellConfig) {
   return {
     name: 'framework:shell',
     inject: [
-      'ui',
-      'notifications',
-      'storage',
-      'commands',
-      'pinia',
-      'platform',
-      'workbench',
-      'editor',
-      'ribbon',
-      'menu',
-      'statusbar',
-      'keybindings',
-      'selection',
-      'surface',
-      'wasm',
-      'kernel',
+      ...new Set([
+        'pinia',
+        'kernel',
+        ...(config.inject ?? [
+          'ui',
+          'notifications',
+          'storage',
+          'commands',
+          'pinia',
+          'platform',
+          'workbench',
+          'editor',
+          'ribbon',
+          'menu',
+          'statusbar',
+          'keybindings',
+          'wasm',
+          'kernel',
+        ]),
+      ]),
     ],
-    apply(ctx: Context) {
-      ctx.plugin(ShellService, config)
+    async apply(ctx: Context) {
+      await ctx.plugin(ShellService, config)
     },
   }
 }

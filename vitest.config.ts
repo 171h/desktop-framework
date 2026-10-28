@@ -9,9 +9,13 @@ export default defineConfig({
     UnoCSS(),
   ],
   resolve: {
-    alias: {
-      '@df': fileURLToPath(new URL('./packages', import.meta.url)),
-    },
+    // 测试可使用内核夹具；包的 CSS / Vue 等子路径仍遵循各自 exports。
+    alias: [
+      {
+        find: /^@df\/([^/]+)$/,
+        replacement: fileURLToPath(new URL('./packages/$1/src/index.ts', import.meta.url)),
+      },
+    ],
   },
   test: {
     environment: 'happy-dom',

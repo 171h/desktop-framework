@@ -6,6 +6,7 @@
  */
 import type { PluginEntry } from '@df/core'
 import type { PresetOptions } from './preset'
+import type { ShellConfig } from './shell'
 import { createFrameworkContext, detectEnvironment, pluginEntry } from '@df/kernel'
 import { StartupTimer } from '@df/vscode'
 import { createDefaultPreset, defaultPreset } from './preset'
@@ -27,6 +28,8 @@ export interface CreateFrameworkAppOptions extends PresetOptions {
   preset?: PluginEntry[]
   /** 追加业务插件，位于预设之后、外壳之前。 */
   plugins?: PluginEntry[]
+  /** 自定义 Vue 外壳及其服务依赖。 */
+  shell?: Pick<ShellConfig, 'component' | 'inject'>
 }
 
 export interface FrameworkApp {
@@ -48,14 +51,13 @@ export async function createFrameworkApp(options: CreateFrameworkAppOptions): Pr
   startup.mark('context-ready')
 
   const basePreset = options.preset
-    ?? (options.include || options.exclude
-      ? createDefaultPreset({ include: options.include, exclude: options.exclude })
-      : defaultPreset)
+    ?? createDefaultPreset({ include: options.include, exclude: options.exclude, extra: options.extra })
   const entries: PluginEntry[] = [
     ...basePreset,
     ...(options.plugins ?? []),
     pluginEntry(
       createShellPlugin({
+        ...options.shell,
         el: options.el,
         title: options.title ?? 'Desktop Framework',
         startup,
@@ -70,11 +72,17 @@ export async function createFrameworkApp(options: CreateFrameworkAppOptions): Pr
     ),
   ]
 
-  await ctx.kernel.load(entries)
-  startup.mark('plugins-ready')
+  try {
+    await ctx.kernel.load(entries)
+    startup.mark('plugins-ready')
 
-  if (!ctx.shell) {
-    throw new Error('应用外壳插件加载失败；请检查内核插件诊断信息')
+    if (!ctx.shell?.mounted) {
+      throw new Error('应用外壳插件加载失败；请检查内核插件诊断信息')
+    }
+  }
+  catch (error) {
+    await ctx.kernel.dispose()
+    throw error
   }
 
   return {
