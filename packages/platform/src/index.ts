@@ -7,6 +7,8 @@
  */
 import type {
   DesktopBridge,
+  DeveloperAction,
+  DeveloperDiagnostics,
   FileDialogFilter,
   FrameworkRuntimeInfo,
   IDisposable,
@@ -135,6 +137,27 @@ export class PlatformService extends Service {
       return
     }
     window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  /** 当前宿主是否暴露受控开发者操作。 */
+  get supportsDeveloperTools(): boolean {
+    return typeof this.bridge?.developerAction === 'function'
+  }
+
+  async developerAction(action: DeveloperAction): Promise<void> {
+    if (this.bridge?.developerAction) {
+      await this.bridge.developerAction(action)
+    }
+    else if (!this.bridge && action === 'reload') {
+      window.location.reload()
+    }
+    else {
+      throw new Error('当前宿主不支持此开发者操作，请使用浏览器自带的开发者工具或升级桌面宿主')
+    }
+  }
+
+  async getDeveloperDiagnostics(): Promise<DeveloperDiagnostics | null> {
+    return this.bridge?.getDeveloperDiagnostics?.() ?? null
   }
 
   /** 版本信息。 */

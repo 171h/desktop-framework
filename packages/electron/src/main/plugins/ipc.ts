@@ -7,6 +7,7 @@ import { errorMessage } from '@df/core'
 import { DisposableStore, toDisposable } from '@df/vscode'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { CHANNELS } from '../../shared'
+import { executeDeveloperAction } from '../developer-tools'
 import { isAllowedNavigation } from '../navigation'
 
 export const name = 'electron:ipc'
@@ -163,6 +164,21 @@ export async function apply(ctx: Context): Promise<void> {
   })
 
   handle(CHANNELS.runtime, async () => host.runtimeInfo ?? null)
+
+  handle(CHANNELS.developerAction, (event, action: unknown) => executeDeveloperAction(
+    event.sender,
+    action,
+    host.options.window?.webPreferences?.devTools !== false,
+  ))
+  handle(CHANNELS.developerDiagnostics, () => ({
+    startup: host.startup.snapshot().map(phase => ({ ...phase })),
+    processes: app.getAppMetrics().map(process => ({
+      pid: process.pid,
+      type: process.type,
+      cpuPercent: process.cpu.percentCPUUsage,
+      memoryMB: process.memory.workingSetSize / 1024,
+    })),
+  }))
 
   ctx.logger.info('[electron] IPC 已注册')
 }

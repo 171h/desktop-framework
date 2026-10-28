@@ -52,6 +52,7 @@ export default defineConfig({
           text: '开发',
           items: [
             { text: '插件开发', link: '/guide/plugins' },
+            { text: '开发者工具', link: '/guide/developer-tools' },
             { text: '主题与 nusys-ui', link: '/guide/theming' },
             { text: '跨平台构建', link: '/guide/cross-platform' },
           ],

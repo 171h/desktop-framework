@@ -15,6 +15,7 @@
   "dependencies": {
     "@df/commands": "workspace:*",
     "@df/core": "workspace:*",
+    "@df/devtools": "workspace:*",
     "@df/editor": "workspace:*",
     "@df/explorer": "workspace:*",
     "@df/kernel": "workspace:*",

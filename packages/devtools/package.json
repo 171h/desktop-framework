@@ -1,0 +1,21 @@
+{
+  "name": "@df/devtools",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "开发者工具插件：通过 Ribbon、菜单和命令面板提供 Chromium 调试器、窗口重载、插件状态、进程资源与启动阶段诊断，并支持导出诊断快照",
+  "sideEffects": false,
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@df/commands": "workspace:*",
+    "@df/core": "workspace:*",
+    "@df/editor": "workspace:*",
+    "@df/kernel": "workspace:*",
+    "@df/platform": "workspace:*",
+    "@df/vscode": "workspace:*",
+    "@df/vue": "workspace:*",
+    "@df/workbench": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "vue": "^3.5.44"
+  }
+}

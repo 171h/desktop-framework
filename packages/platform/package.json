@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "private": true,
-  "description": "跨平台宿主能力服务：统一封装 Electron preload 桥与浏览器降级，提供文件选择、保存、窗口控制、外部链接和运行时信息读取",
+  "description": "跨平台宿主能力服务：统一封装 Electron preload 桥与浏览器降级，提供文件选择、保存、窗口控制、外部链接、运行时信息及受控开发者操作与进程诊断",
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"

@@ -15,7 +15,8 @@ export async function apply(ctx: Context): Promise<void> {
   ctx.effect(() => () => disposables.dispose(), 'electron:menu')
 
   const send = (command: string) => (): void => {
-    const target = BrowserWindow.getFocusedWindow() ?? host.mainWindow
+    // DevTools 独立窗口可能持有焦点；菜单命令始终发给安装了框架桥的主窗口。
+    const target = host.mainWindow
     target?.webContents.send(CHANNELS.command, command)
   }
 
@@ -118,16 +119,39 @@ function defaultTemplate(send: (command: string) => () => void): MenuItemConstru
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
-        ...(app.isPackaged
-          ? []
-          : [
-              { role: 'toggleDevTools' as const },
-            ]),
-        ...(app.isPackaged
-          ? []
-          : [
-              { role: 'reload' as const },
-            ]),
+      ],
+    },
+    {
+      label: '开发者',
+      submenu: [
+        {
+          label: '切换开发者工具',
+          accelerator: isMac ? 'Command+Alt+I' : 'Ctrl+Shift+I',
+          click: send('developer.toggleDevTools'),
+        },
+        {
+          label: '重载窗口',
+          accelerator: 'CmdOrCtrl+R',
+          click: send('developer.reloadWindow'),
+        },
+        {
+          label: '忽略缓存重载',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          click: send('developer.reloadIgnoringCache'),
+        },
+        { type: 'separator' },
+        {
+          label: '运行诊断',
+          click: send('developer.showDiagnostics'),
+        },
+        {
+          label: '运行输出',
+          click: send('developer.showOutput'),
+        },
+        {
+          label: '导出诊断',
+          click: send('developer.exportDiagnostics'),
+        },
       ],
     },
     {
@@ -149,14 +173,6 @@ function defaultTemplate(send: (command: string) => () => void): MenuItemConstru
           label: '打开框架文档',
           click: () => {
             void shell.openExternal('https://github.com/171h/desktop-framework/tree/main/docs')
-          },
-        },
-        {
-          label: '打开开发者工具',
-          accelerator: 'CmdOrCtrl+Shift+I',
-          click: () => {
-            const window = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
-            window?.webContents.openDevTools({ mode: 'detach' })
           },
         },
       ],

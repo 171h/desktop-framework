@@ -6,6 +6,7 @@
  */
 import type { PluginEntry } from '@df/core'
 import commands from '@df/commands'
+import devtools from '@df/devtools'
 import editor from '@df/editor'
 import explorer from '@df/explorer'
 import { pluginEntry } from '@df/kernel'
@@ -139,6 +140,12 @@ export function createDefaultPreset(options: PresetOptions = {}): PluginEntry[] 
       name: '输出面板',
       version: '0.1.0',
       description: '运行日志与诊断',
+    }),
+    pluginEntry(devtools, undefined, {
+      id: 'framework:devtools',
+      name: '开发者工具',
+      version: '0.1.0',
+      description: '调试器、重载、插件与进程诊断、诊断导出',
     }),
     pluginEntry(surface, undefined, {
       id: 'framework:surface',

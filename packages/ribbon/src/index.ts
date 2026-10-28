@@ -205,6 +205,7 @@ export class RibbonService extends Service {
           .map<VscRibbonGroup>(group => ({
             id: `${tab.id}.${group.title}`,
             title: group.title,
+            order: group.order,
             items: group.items
               .sort((a, b) => a.order - b.order)
               .map(entry => entry.item),
@@ -228,6 +229,7 @@ function toRibbonItem(ctx: Context, command: CommandDefinition, placement: Ribbo
   return {
     command: command.id,
     title: command.title,
+    order: placement.order,
     icon: command.icon,
     size: placement.size ?? 'full',
     style: placement.style,

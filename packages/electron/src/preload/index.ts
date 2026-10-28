@@ -13,6 +13,12 @@ export function exposeDesktopBridge(): void {
   const appVersion = versionArg?.slice('--df-app-version='.length) ?? '0.1.0'
 
   const bridge: DesktopBridge = {
+    async developerAction(action): Promise<void> {
+      await ipcRenderer.invoke(CHANNELS.developerAction, action)
+    },
+    async getDeveloperDiagnostics() {
+      return ipcRenderer.invoke(CHANNELS.developerDiagnostics)
+    },
     platform: process.platform,
     versions: {
       electron: process.versions.electron,

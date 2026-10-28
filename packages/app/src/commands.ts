@@ -18,6 +18,14 @@ export const inject = [
 
 export function apply(ctx: Context): void {
   ctx.effect(() => {
+    const subscription = ctx.platform.onCommand((id, args) => {
+      if (ctx.commands.has(id)) {
+        void ctx.commands.execute(id, ...(args ?? [])).catch(() => {})
+      }
+    })
+    return () => subscription.dispose()
+  }, 'app:native-commands')
+  ctx.effect(() => {
     const command = ctx.commands.register({
       id: 'workbench.saveWorkspace',
       title: '保存工作区…',

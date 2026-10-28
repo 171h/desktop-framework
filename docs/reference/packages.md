@@ -23,6 +23,7 @@
 | `@df/explorer` | 工作区与插件资源浏览器 |
 | `@df/properties` | 选择对象属性面板 |
 | `@df/output` | 运行输出与诊断面板 |
+| `@df/devtools` | 开发者调试器、窗口重载、插件 / 进程 / 启动诊断及 JSON 导出 |
 | `@df/wasm` | 加载 Rust/WASM 热路径并提供降级实现 |
 | `@df/platform` | 浏览器与 Electron 宿主能力适配 |
 | `@df/bootstrap` | 运行时配置解析、按 commit 拉取、校验与缓存 |

@@ -4,6 +4,8 @@ import type { BrowserWindowConstructorOptions, MenuItemConstructorOptions } from
 
 /** IPC 通道。 */
 export const CHANNELS = {
+  developerAction: 'df:developer-action',
+  developerDiagnostics: 'df:developer-diagnostics',
   openFiles: 'df:open-files',
   saveFile: 'df:save-file',
   windowControl: 'df:window-control',

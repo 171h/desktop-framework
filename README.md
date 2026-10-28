@@ -133,6 +133,7 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
 - [架构总览](./docs/architecture/overview.md)
 - [AutoDesk 设计借鉴](./docs/design/autodesk.md)
 - [插件系统](./docs/guide/plugins.md)
+- [开发者工具](./docs/guide/developer-tools.md)
 - [Electron 宿主](./docs/architecture/electron.md)
 - [跨平台构建](./docs/guide/cross-platform.md)
 

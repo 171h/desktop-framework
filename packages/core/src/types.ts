@@ -377,6 +377,14 @@ export interface SaveFileRequest {
 /** 窗口控制动作。 */
 export type WindowControlAction = 'minimize' | 'maximize' | 'unmaximize' | 'toggleMaximize' | 'close'
 
+/** 受控开发者操作，不允许传入任意脚本或 IPC 通道。 */
+export type DeveloperAction = 'toggleDevTools' | 'reload' | 'reloadIgnoringCache'
+
+export interface DeveloperDiagnostics {
+  startup: { name: string, at: number, delta: number }[]
+  processes: { pid: number, type: string, cpuPercent: number, memoryMB: number }[]
+}
+
 /** 原生标题栏覆盖层样式。 */
 export interface TitleBarOverlayOptions {
   /** 覆盖层背景色，支持十六进制、rgb(a)、hsl(a)。 */
@@ -405,6 +413,9 @@ export interface FrameworkRuntimeInfo {
  * 浏览器环境没有该对象，`@df/platform` 会提供等价降级。
  */
 export interface DesktopBridge {
+  /** 可选以兼容旧宿主；新运行时应先检查能力再使用。 */
+  developerAction?: (action: DeveloperAction) => Promise<void>
+  getDeveloperDiagnostics?: () => Promise<DeveloperDiagnostics>
   readonly platform: string
   readonly versions: {
     electron?: string

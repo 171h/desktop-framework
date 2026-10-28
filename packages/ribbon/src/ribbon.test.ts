@@ -52,6 +52,8 @@ describe('ribbon', () => {
     expect(home?.title).toBe('主页')
     const group = home?.groups.find(candidate => candidate.title === '演示')
     expect(group?.items[0].command).toBe('test.hello')
+    // nusys-ui 会再次按 order 排序，必须把元数据传到实际组件，不能只预排数组。
+    expect(group?.items[0].order).toBe(1)
     await ctx.kernel.dispose()
   })
 

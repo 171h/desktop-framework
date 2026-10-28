@@ -330,6 +330,9 @@ importers:
       '@df/core':
         specifier: workspace:*
         version: link:../core
+      '@df/devtools':
+        specifier: workspace:*
+        version: link:../devtools
       '@df/editor':
         specifier: workspace:*
         version: link:../editor
@@ -433,6 +436,39 @@ importers:
       cordis:
         specifier: ^4.0.0-rc.12
         version: 4.0.0-rc.12
+
+  packages/devtools:
+    dependencies:
+      '@df/commands':
+        specifier: workspace:*
+        version: link:../commands
+      '@df/core':
+        specifier: workspace:*
+        version: link:../core
+      '@df/editor':
+        specifier: workspace:*
+        version: link:../editor
+      '@df/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      '@df/platform':
+        specifier: workspace:*
+        version: link:../platform
+      '@df/vscode':
+        specifier: workspace:*
+        version: link:../vscode
+      '@df/vue':
+        specifier: workspace:*
+        version: link:../vue
+      '@df/workbench':
+        specifier: workspace:*
+        version: link:../workbench
+      cordis:
+        specifier: ^4.0.0-rc.12
+        version: 4.0.0-rc.12
+      vue:
+        specifier: ^3.5.44
+        version: 3.5.44(typescript@6.0.3)
 
   packages/editor:
     dependencies:
