@@ -40,6 +40,7 @@ watch(
 
 <template>
   <div class="df-app" :class="{ 'is-mac': isMac }">
+    <!-- 整条标题栏为原生拖拽区；内部交互控件统一标记 no-drag。 -->
     <header class="df-titlebar df-app-region-drag">
       <div class="df-titlebar__left">
         <img class="df-brand" :src="appIcon" alt="Desktop Framework" draggable="false">
@@ -57,6 +58,7 @@ watch(
       <div class="df-titlebar__right">
         <WorkspaceSwitcher />
         <vscode-toolbar-button
+          class="df-titlebar__search df-app-region-no-drag"
           icon="search"
           label="命令面板"
           @click="ctx.ui.togglePalette(true)"
@@ -106,6 +108,7 @@ watch(
   padding-bottom: 0;
   padding-left: calc(env(titlebar-area-x, 0px) + 10px);
   border-bottom: 1px solid var(--df-border);
+  -webkit-app-region: drag;
   background: linear-gradient(180deg, var(--df-titlebar), color-mix(in srgb, var(--df-titlebar) 88%, var(--df-canvas)));
   user-select: none;
 }
@@ -120,7 +123,6 @@ watch(
   align-items: center;
   gap: 4px;
   flex: 0 0 auto;
-  -webkit-app-region: no-drag;
 }
 
 .df-titlebar__left {
@@ -174,6 +176,10 @@ watch(
   color: var(--df-muted);
   font-size: 10px;
   white-space: nowrap;
+}
+
+.df-titlebar__search {
+  -webkit-app-region: no-drag;
 }
 
 .df-titlebar__dirty {

@@ -72,6 +72,7 @@ titleBarOverlay: {
 - Windows/Linux：`titleBarOverlay` 暴露操作系统原生窗口控制按钮。
 - macOS：`hiddenInset` 保留原生交通灯，并调整垂直位置。
 - 自定义标题栏只负责应用菜单、Ribbon 上下文、文档标题和工作区切换。
+- 标题栏根节点设置 `-webkit-app-region: drag`；按钮、菜单、工作区切换等交互区域显式设置 `no-drag`，空白区域和标题文本可直接拖动窗口。
 - 使用 `env(titlebar-area-x)` 与 `env(titlebar-area-width)` 给原生按钮预留安全区，兼容 RTL 和把按钮放在左侧的 Linux 窗口管理器。
 - 主题切换时通过 `setTitleBarOverlay` IPC 同步覆盖层颜色。
 - 应用图标同时用于原生窗口/任务栏图标与标题栏左侧标识，不在页面内重绘系统按钮。
