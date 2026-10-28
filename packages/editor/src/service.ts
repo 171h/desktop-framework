@@ -119,6 +119,7 @@ export class EditorService extends Service {
       ? next.length
       : Math.max(0, Math.min(options.index, next.length))
     const pinnedCount = next.filter(item => item.pinned).length
+    let replacedActive = false
 
     if (stored.pinned) {
       index = pinnedCount
@@ -129,6 +130,7 @@ export class EditorService extends Service {
         const replaced = next[previewIndex]
         index = previewIndex
         if (replaced.id !== stored.id) {
+          replacedActive = replaced.id === this.active.value
           next.splice(previewIndex, 1)
           this.mru = this.mru.filter(id => id !== replaced.id)
           this.ctx.emit('editor/closed', replaced.id)
@@ -145,7 +147,7 @@ export class EditorService extends Service {
     next.splice(index, 0, stored)
     this.items.value = next
     this.ctx.emit('editor/opened', stored.id)
-    if (options.activate !== false) {
+    if (options.activate !== false || replacedActive) {
       this.activate(stored.id)
     }
     this.ctx.emit('editor/changed')

@@ -91,6 +91,15 @@ describe('editor', () => {
     })
     expect(ctx.editor.documents.map(document => document.id)).toEqual(['welcome', 'preview-2', 'preview-3'])
     expect(ctx.editor.documents.filter(document => document.preview)).toHaveLength(1)
+
+    ctx.editor.open({
+      id: 'preview-4',
+      title: 'P4',
+      component: TestView,
+      preview: true,
+    }, { activate: false })
+    expect(ctx.editor.activeId).toBe('preview-4')
+    expect(ctx.editor.documents.map(document => document.id)).toEqual(['welcome', 'preview-2', 'preview-4'])
     await ctx.kernel.dispose()
   })
 
