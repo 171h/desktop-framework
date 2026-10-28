@@ -104,6 +104,7 @@ export function createShellPlugin(config: ShellConfig) {
       'pinia',
       'platform',
       'workbench',
+      'editor',
       'ribbon',
       'menu',
       'statusbar',

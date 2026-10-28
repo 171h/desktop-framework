@@ -38,6 +38,14 @@ declare module 'cordis' {
     'ui/theme-changed': (theme: ThemeId) => void
     /** 通知新增。 */
     'notification/added': (id: number) => void
+    /** 打开编辑器标签页。 */
+    'editor/opened': (id: string) => void
+    /** 关闭编辑器标签页。 */
+    'editor/closed': (id: string) => void
+    /** 活动标签页变化。 */
+    'editor/active-changed': (id: string | undefined) => void
+    /** 标签页顺序、固定或脏状态变化。 */
+    'editor/changed': () => void
     /** Electron 窗口最大化状态变化。 */
     'electron/window-state': (state: WindowState) => void
   }
@@ -224,6 +232,9 @@ export interface CommandDefinition {
   /** 执行函数。 */
   run: CommandHandler
 }
+
+/** Ribbon 标签栏位置。 */
+export type RibbonTabPlacement = 'titlebar' | 'separate'
 
 /** Ribbon 页签定义。 */
 export interface RibbonTabDefinition {

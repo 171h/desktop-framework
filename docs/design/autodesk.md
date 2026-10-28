@@ -6,10 +6,11 @@ AutoDesk 系列软件（AutoCAD、Revit、Inventor、3ds Max 等）界面差异�
 
 ### 1. 固定骨架
 
-- 标题栏：应用标识、文档名、窗口控制。
+- 标题栏：应用标识、文档名、窗口控制；Ribbon 页签可选择放在标题栏。
 - 应用菜单：文件、编辑、视图、帮助等全局动作。
 - 快速访问工具栏：高频命令的固定入口。
 - Ribbon：按任务组织的页签、功能组、按钮。
+- 文档标签页：主工作区中的 VS Code 风格文档切换与关闭。
 - 左右停靠面板：资源、图层、属性、工具选项。
 - 中央视口：承载图形/模型/编辑对象。
 - 底部区域：命令行、时间轴、输出、状态提示。
@@ -51,6 +52,7 @@ AutoDesk 的按钮、菜单、快捷键和命令行最终都落到命令。界�
 | 应用菜单 | `@desktop-framework/menu` 的 `AppMenu` |
 | 快速访问工具栏 | 命令 `toolbar` 元数据 + `QuickAccess` |
 | Ribbon | 命令 `ribbon` 元数据 + `vscode-ribbon` |
+| 文档标签页 | `editor` 服务 + nusys-ui `vscode-tabs` |
 | 工作区 | `workbench` Pinia store + `WorkspacePreset` |
 | 停靠面板 | `workbench.registerView()` + `DfSplitLayout` |
 | 视口 | `surface` WebGL2 画布 + 可扩展节点服务 |

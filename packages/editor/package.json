@@ -1,0 +1,25 @@
+{
+  "name": "@desktop-framework/editor",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VS Code 风格编辑器标签页插件：文档打开、关闭、固定、脏状态、拖拽排序、溢出滚动、右键菜单与快捷键导航",
+  "sideEffects": [
+    "**/*.css",
+    "**/*.vue"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./EditorTabBar.vue": "./src/EditorTabBar.vue",
+    "./WelcomeView.vue": "./src/WelcomeView.vue"
+  },
+  "dependencies": {
+    "@desktop-framework/commands": "workspace:*",
+    "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/keybindings": "workspace:*",
+    "@desktop-framework/vue": "workspace:*",
+    "cordis": "^4.0.0-rc.12",
+    "nusys-ui": "^4.2.1",
+    "vue": "^3.5.44"
+  }
+}

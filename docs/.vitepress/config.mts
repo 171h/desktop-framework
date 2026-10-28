@@ -43,6 +43,7 @@ export default defineConfig({
             { text: '快速开始', link: '/guide/getting-started' },
             { text: '集成到自己的软件', link: '/guide/integration' },
             { text: '命令系统', link: '/guide/commands' },
+            { text: '文档标签页', link: '/guide/editor' },
             { text: '工作区', link: '/guide/workspaces' },
           ],
         },

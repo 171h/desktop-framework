@@ -21,21 +21,21 @@ function fakeStorage(): StorageLike {
   }
 }
 
-async function setup() {
+async function setup(backend = fakeStorage()) {
   const ctx = await createFrameworkContext({ environment: 'test' })
   await ctx.plugin(settingsPlugin, {
     namespace: 'test',
-    storage: fakeStorage(),
+    storage: backend,
   })
   await ctx.plugin(commandsPlugin)
   await ctx.plugin(keybindingsPlugin)
   await ctx.plugin(ribbonPlugin)
-  return ctx
+  return { ctx, backend }
 }
 
 describe('ribbon', () => {
   it('builds tabs from command placement', async () => {
-    const ctx = await setup()
+    const { ctx } = await setup()
     ctx.commands.register({
       id: 'test.hello',
       title: 'Hello',
@@ -50,13 +50,27 @@ describe('ribbon', () => {
     })
     const home = ctx.ribbon.tabs.find(tab => tab.id === 'home')
     expect(home?.title).toBe('主页')
-    expect(home?.groups[0].title).toBe('演示')
-    expect(home?.groups[0].items[0].command).toBe('test.hello')
+    const group = home?.groups.find(candidate => candidate.title === '演示')
+    expect(group?.items[0].command).toBe('test.hello')
+    await ctx.kernel.dispose()
+  })
+
+  it('toggles the ribbon tab placement', async () => {
+    const { ctx, backend } = await setup()
+    expect(ctx.ribbon.tabPlacement).toBe('titlebar')
+    expect(ctx.commands.isChecked('ribbon.toggleTabPlacement')).toBe(true)
+    ctx.ribbon.toggleTabPlacement()
+    expect(ctx.ribbon.tabPlacement).toBe('separate')
+    expect(ctx.commands.isChecked('ribbon.toggleTabPlacement')).toBe(false)
+    expect(JSON.parse(backend.getItem('test:ribbon.tabPlacement') ?? 'null')).toBe('separate')
+    ctx.ribbon.setTabPlacement('titlebar')
+    expect(ctx.ribbon.tabPlacement).toBe('titlebar')
+    expect(JSON.parse(backend.getItem('test:ribbon.tabPlacement') ?? 'null')).toBe('titlebar')
     await ctx.kernel.dispose()
   })
 
   it('reflects dynamic checked state', async () => {
-    const ctx = await setup()
+    const { ctx } = await setup()
     let checked = false
     ctx.commands.register({
       id: 'test.toggle',

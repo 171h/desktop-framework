@@ -19,6 +19,7 @@ desktop-framework/
 │  ├─ notifications/       # 通知
 │  ├─ statusbar/           # 状态栏
 │  ├─ workbench/           # 布局与工作区
+│  ├─ editor/              # 文档标签页
 │  ├─ ribbon/              # Ribbon
 │  ├─ menu/                # 应用菜单
 │  ├─ selection/           # 选择状态

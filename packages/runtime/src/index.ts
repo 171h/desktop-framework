@@ -18,6 +18,7 @@ export type {
   FrameworkPluginManifest,
   PluginEntry,
   RibbonPlacement,
+  RibbonTabPlacement,
   ViewDefinition,
   WorkbenchLayout,
   WorkspacePreset,

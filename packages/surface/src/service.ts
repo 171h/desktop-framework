@@ -163,7 +163,7 @@ const DEFAULT_CONNECTIONS: SurfaceConnection[] = [
 export class SurfaceService extends Service {
   static inject = [
     'commands',
-    'workbench',
+    'editor',
     'selection',
     'statusbar',
   ]
@@ -186,18 +186,16 @@ export class SurfaceService extends Service {
   constructor(ctx: Context) {
     super(ctx, 'surface')
     ctx.effect(() => {
-      const registration = ctx.workbench.registerView({
+      const registration = ctx.editor.open({
         id: 'surface',
         title: '工作流画布',
         icon: 'symbol-color',
-        location: 'main',
-        default: true,
-        closable: false,
         component: markRaw(SurfaceView),
-        pluginId: 'framework:surface',
+        closable: false,
+        pinned: true,
       })
       return () => registration.dispose()
-    }, 'surface:view')
+    }, 'surface:document')
     ctx.effect(() => ctx.statusbar.register({
       id: 'surface.zoom',
       alignment: 'right',
@@ -508,7 +506,7 @@ export class SurfaceService extends Service {
 export const name = 'framework:surface'
 export const inject = [
   'commands',
-  'workbench',
+  'editor',
   'selection',
   'statusbar',
 ]

@@ -330,6 +330,9 @@ importers:
       '@desktop-framework/core':
         specifier: workspace:*
         version: link:../core
+      '@desktop-framework/editor':
+        specifier: workspace:*
+        version: link:../editor
       '@desktop-framework/explorer':
         specifier: workspace:*
         version: link:../explorer
@@ -430,6 +433,30 @@ importers:
       cordis:
         specifier: ^4.0.0-rc.12
         version: 4.0.0-rc.12
+
+  packages/editor:
+    dependencies:
+      '@desktop-framework/commands':
+        specifier: workspace:*
+        version: link:../commands
+      '@desktop-framework/core':
+        specifier: workspace:*
+        version: link:../core
+      '@desktop-framework/keybindings':
+        specifier: workspace:*
+        version: link:../keybindings
+      '@desktop-framework/vue':
+        specifier: workspace:*
+        version: link:../vue
+      cordis:
+        specifier: ^4.0.0-rc.12
+        version: 4.0.0-rc.12
+      nusys-ui:
+        specifier: ^4.2.1
+        version: 4.2.1(@vscode/codicons@0.0.46-24)
+      vue:
+        specifier: ^3.5.44
+        version: 3.5.44(typescript@6.0.3)
 
   packages/electron:
     dependencies:
@@ -716,6 +743,9 @@ importers:
       '@desktop-framework/core':
         specifier: workspace:*
         version: link:../core
+      '@desktop-framework/editor':
+        specifier: workspace:*
+        version: link:../editor
       '@desktop-framework/selection':
         specifier: workspace:*
         version: link:../selection
@@ -728,9 +758,6 @@ importers:
       '@desktop-framework/vue':
         specifier: workspace:*
         version: link:../vue
-      '@desktop-framework/workbench':
-        specifier: workspace:*
-        version: link:../workbench
       cordis:
         specifier: ^4.0.0-rc.12
         version: 4.0.0-rc.12

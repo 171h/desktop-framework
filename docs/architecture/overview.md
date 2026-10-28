@@ -59,7 +59,8 @@ renderer main.ts
 | `ctx.storage` | settings | 命名空间化本地存储 |
 | `ctx.ui` | ui | 主题、槽位、命令面板、对话框 |
 | `ctx.workbench` | workbench | 布局、停靠视图、工作区 |
-| `ctx.ribbon` | ribbon | 从命令生成 Ribbon |
+| `ctx.editor` | editor | 文档标签页、活动文档与关闭/固定/脏状态 |
+| `ctx.ribbon` | ribbon | 从命令生成 Ribbon、页签栏位置 |
 | `ctx.menu` | menu | 应用菜单与快速访问 |
 | `ctx.statusbar` | statusbar | 状态项与消息 |
 | `ctx.notifications` | notifications | 通知队列 |
@@ -78,8 +79,8 @@ Cordis 事件用于跨插件通知，典型事件：
 - `command/registered` / `command/executed` / `command/failed`
 - `workbench/layout-changed` / `workbench/workspace-applied`
 - `selection/changed`
+- `editor/opened` / `editor/closed` / `editor/active-changed`
 - `ui/theme-changed`
 - `notification/added`
-- `ui/theme-changed`
 
 事件只承载轻量数据；大对象通过服务读取，避免事件成为隐式全局状态。

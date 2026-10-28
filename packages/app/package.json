@@ -15,6 +15,7 @@
   "dependencies": {
     "@desktop-framework/commands": "workspace:*",
     "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/editor": "workspace:*",
     "@desktop-framework/explorer": "workspace:*",
     "@desktop-framework/kernel": "workspace:*",
     "@desktop-framework/keybindings": "workspace:*",

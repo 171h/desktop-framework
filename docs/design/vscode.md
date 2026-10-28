@@ -25,6 +25,16 @@ import { DisposableStore, toDisposable } from '@desktop-framework/vscode'
 3. **所有复制代码集中到 `packages/vscode`**，不散落在业务包。
 4. 对外只暴露稳定 API，不让业务依赖 VS Code 内部路径。
 
+## 编辑器标签页
+
+主工作区的文档标签栏复用 nusys-ui 的 `vscode-tabs` / `vscode-tab-header`，保留 VS Code 的拖拽排序、溢出滚动与键盘焦点行为。`@desktop-framework/editor` 在其上补充：
+
+- 文档生命周期与 `KeepAlive` 内容缓存；
+- 关闭按钮、中键关闭、右键菜单；
+- 关闭其他 / 关闭右侧 / 全部关闭；
+- 固定标签、脏状态圆点与预览斜体；
+- `Ctrl+W`、`Ctrl+Tab`、`Ctrl+Shift+Tab` 等文档命令。
+
 ## Electron 工程实践
 
 | VS Code 做法 | 本框架实现 |

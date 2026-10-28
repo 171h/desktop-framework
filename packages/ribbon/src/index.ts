@@ -5,12 +5,14 @@
  * `vscode-ribbon` 的 `tabs` 数据；按钮的启用、勾选和快捷键状态都是惰性
  * 求值，因此无需手工同步 UI 状态。
  */
-import type { CommandDefinition, IDisposable, RibbonPlacement, RibbonTabDefinition } from '@desktop-framework/core'
+import type { CommandDefinition, IDisposable, RibbonPlacement, RibbonTabDefinition, RibbonTabPlacement } from '@desktop-framework/core'
 import type { Context } from 'cordis'
 import type { VscRibbonGroup, VscRibbonItem, VscRibbonTab } from 'nusys-ui'
 import { errorMessage } from '@desktop-framework/core'
 import { Service } from 'cordis'
 import { ref } from 'vue'
+
+export { default as RibbonTabs } from './RibbonTabs.vue'
 
 declare module 'cordis' {
   interface Context {
@@ -19,6 +21,7 @@ declare module 'cordis' {
 }
 
 const ACTIVE_TAB_KEY = 'ribbon.activeTab'
+const TAB_PLACEMENT_KEY = 'ribbon.tabPlacement'
 
 interface BuildTab {
   id: string
@@ -39,10 +42,15 @@ export class RibbonService extends Service {
 
   private readonly tabDefinitions = ref(new Map<string, RibbonTabDefinition>())
   private readonly active = ref('home')
+  private readonly placement = ref<RibbonTabPlacement>('titlebar')
 
   constructor(ctx: Context) {
     super(ctx, 'ribbon')
     this.active.value = ctx.storage.get<string>(ACTIVE_TAB_KEY, 'home')
+    this.placement.value = ctx.storage.get<string>(TAB_PLACEMENT_KEY, 'titlebar') === 'separate'
+      ? 'separate'
+      : 'titlebar'
+    this.registerPlacementCommand()
   }
 
   /**
@@ -58,6 +66,27 @@ export class RibbonService extends Service {
   /** 活动页签。 */
   get activeTabId(): string {
     return this.active.value
+  }
+
+  /** 页签栏位置：标题栏或独立一行。 */
+  get tabPlacement(): RibbonTabPlacement {
+    return this.placement.value
+  }
+
+  /** 设置页签栏位置并持久化。 */
+  setTabPlacement(placement: RibbonTabPlacement): void {
+    if (this.placement.value === placement) {
+      return
+    }
+    this.placement.value = placement
+    this.ctx.storage.set(TAB_PLACEMENT_KEY, placement)
+  }
+
+  /** 在标题栏与独立一行之间切换。 */
+  toggleTabPlacement(): void {
+    this.setTabPlacement(this.placement.value === 'titlebar'
+      ? 'separate'
+      : 'titlebar')
   }
 
   /** 注册页签元数据（无命令时不会显示）。 */
@@ -96,6 +125,34 @@ export class RibbonService extends Service {
     catch (error) {
       this.ctx.logger.warn(`[ribbon] ${command}: ${errorMessage(error)}`)
     }
+  }
+
+  private registerPlacementCommand(): void {
+    this.ctx.effect(() => {
+      const registration = this.ctx.commands.register({
+        id: 'ribbon.toggleTabPlacement',
+        title: '页签位置',
+        description: '在标题栏和独立一行之间切换功能区标签；勾选表示位于标题栏。',
+        category: '功能区',
+        icon: 'layout',
+        checked: () => this.tabPlacement === 'titlebar',
+        ribbon: {
+          tab: 'home',
+          tabTitle: '主页',
+          tabOrder: 0,
+          group: '功能区',
+          groupOrder: 40,
+          order: 0,
+          size: 'full',
+        },
+        menu: {
+          path: ['视图'],
+          order: 35,
+        },
+        run: () => this.toggleTabPlacement(),
+      })
+      return () => registration.dispose()
+    }, 'ribbon:tab-placement')
   }
 
   private buildTabs(): VscRibbonTab[] {

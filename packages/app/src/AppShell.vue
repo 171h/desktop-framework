@@ -2,6 +2,7 @@
 import AppMenu from '@desktop-framework/menu/AppMenu.vue'
 import QuickAccess from '@desktop-framework/menu/QuickAccess.vue'
 import NotificationStack from '@desktop-framework/notifications/NotificationStack.vue'
+import { RibbonTabs } from '@desktop-framework/ribbon'
 import RibbonBar from '@desktop-framework/ribbon/RibbonBar.vue'
 import StatusBar from '@desktop-framework/statusbar/StatusBar.vue'
 import { DfPromptDialog, DfSlot } from '@desktop-framework/ui'
@@ -15,6 +16,7 @@ import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue'
 const ctx = useCordis()
 const isMac = computed(() => ctx.platform.platform === 'darwin')
 const layout = computed(() => ctx.workbench.layout)
+const ribbonInTitlebar = computed(() => ctx.ribbon.tabPlacement === 'titlebar')
 
 // Windows/Linux 的原生窗口控制按钮由 titleBarOverlay 绘制。主题变化时同步
 // 覆盖层颜色，避免浅色主题下出现一块深色标题栏。
@@ -39,7 +41,7 @@ watch(
 </script>
 
 <template>
-  <div class="df-app" :class="{ 'is-mac': isMac }">
+  <div class="df-app" :class="{ 'is-mac': isMac, 'is-ribbon-in-titlebar': ribbonInTitlebar }">
     <!-- 整条标题栏为原生拖拽区；内部交互控件统一标记 no-drag。 -->
     <header class="df-titlebar df-app-region-drag">
       <div class="df-titlebar__left">
@@ -49,10 +51,21 @@ watch(
         <QuickAccess />
       </div>
 
-      <div class="df-titlebar__center">
-        <span class="df-titlebar__title">{{ ctx.shell.title }}</span>
-        <span class="df-titlebar__breadcrumb">· {{ ctx.workbench.activeWorkspace.name }}</span>
-        <span class="df-titlebar__dirty" title="本地工作台">LOCAL</span>
+      <div
+        class="df-titlebar__center"
+        :class="{ 'has-ribbon-tabs': ribbonInTitlebar }"
+      >
+        <RibbonTabs v-if="ribbonInTitlebar" />
+        <span
+          v-if="ribbonInTitlebar"
+          class="df-titlebar__drag-space"
+          aria-hidden="true"
+        />
+        <template v-else>
+          <span class="df-titlebar__title">{{ ctx.shell.title }}</span>
+          <span class="df-titlebar__breadcrumb">· {{ ctx.workbench.activeWorkspace.name }}</span>
+          <span class="df-titlebar__dirty" title="本地工作台">LOCAL</span>
+        </template>
       </div>
 
       <div class="df-titlebar__right">
@@ -145,6 +158,19 @@ watch(
   pointer-events: none;
 }
 
+.df-app.is-ribbon-in-titlebar .df-titlebar__left,
+.df-app.is-ribbon-in-titlebar .df-titlebar__right {
+  flex: 0 0 auto;
+}
+
+.df-titlebar__center.has-ribbon-tabs {
+  align-items: stretch;
+  justify-content: flex-start;
+  flex: 1 1 auto;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
 .df-brand {
   width: 20px;
   height: 20px;
@@ -176,6 +202,13 @@ watch(
   color: var(--df-muted);
   font-size: 10px;
   white-space: nowrap;
+}
+
+.df-titlebar__drag-space {
+  flex: 1;
+  min-width: 12px;
+  align-self: stretch;
+  -webkit-app-region: drag;
 }
 
 .df-titlebar__search {

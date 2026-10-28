@@ -75,7 +75,9 @@ ctx.workbench.registerView({
 
 ## 主视图
 
-`location: 'main'` 的视图占据中央区域。默认是 `surface`，也可以替换为企业自己的 3D/文档/图表主视图：
+主工作区默认由 `editor` 插件承载文档标签页；画布、文档、图表等页面通过 `ctx.editor.open()` 作为文档打开，具体见[文档标签页](/guide/editor)。
+
+`location: 'main'` 仍可用于没有文档时提供中央区域回退视图：
 
 ```ts
 ctx.workbench.registerView({
@@ -86,7 +88,7 @@ ctx.workbench.registerView({
 })
 ```
 
-多个 main 视图时，第一个成为默认，可用 `openView` 切换。
+多个 main 视图时，第一个成为默认，可用 `openView` 切换；只要存在编辑器文档，MainRegion 会优先渲染活动文档。
 
 ## 响应式读取
 

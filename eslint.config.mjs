@@ -46,6 +46,7 @@ export default antfu({
           'vscode-ribbon',
           'vscode-split-layout',
           'vscode-tabs',
+          'vscode-tab-header',
           'vscode-textfield',
           'vscode-tree-item',
         ],

@@ -6,6 +6,7 @@
  */
 import type { PluginEntry } from '@desktop-framework/core'
 import commands from '@desktop-framework/commands'
+import editor from '@desktop-framework/editor'
 import explorer from '@desktop-framework/explorer'
 import { pluginEntry } from '@desktop-framework/kernel'
 import keybindings from '@desktop-framework/keybindings'
@@ -84,6 +85,12 @@ export function createDefaultPreset(options: PresetOptions = {}): PluginEntry[] 
       name: '工作台',
       version: '0.1.0',
       description: '布局、停靠视图与工作区',
+    }),
+    pluginEntry(editor, undefined, {
+      id: 'framework:editor',
+      name: '编辑器标签页',
+      version: '0.1.0',
+      description: 'VS Code 风格文档标签页与文档生命周期',
     }),
     pluginEntry(ribbon, undefined, {
       id: 'framework:ribbon',

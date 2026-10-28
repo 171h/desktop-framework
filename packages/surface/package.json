@@ -12,11 +12,11 @@
   "dependencies": {
     "@desktop-framework/commands": "workspace:*",
     "@desktop-framework/core": "workspace:*",
+    "@desktop-framework/editor": "workspace:*",
     "@desktop-framework/selection": "workspace:*",
     "@desktop-framework/statusbar": "workspace:*",
     "@desktop-framework/ui": "workspace:*",
     "@desktop-framework/vue": "workspace:*",
-    "@desktop-framework/workbench": "workspace:*",
     "cordis": "^4.0.0-rc.12",
     "vue": "^3.5.44"
   }

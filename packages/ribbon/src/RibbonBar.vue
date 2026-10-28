@@ -31,6 +31,7 @@ function onCollapse(collapsed: boolean): void {
     :tabs="ctx.ribbon.tabs"
     :active-tab-id="ctx.ribbon.activeTabId"
     :collapsed="ctx.workbench.layout.ribbonCollapsed"
+    :hide-tabs="ctx.ribbon.tabPlacement === 'titlebar'"
     @command="onCommand"
     @select="onSelect"
     @collapse="onCollapse"
