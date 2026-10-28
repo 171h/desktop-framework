@@ -80,6 +80,18 @@ describe('bootstrap config', () => {
     await expect(verifyIntegrity(bytes, `sha256:${hex}`)).resolves.toBe(`sha256:${hex}`)
   })
 
+  it.each([
+    { commit: '../../outside' },
+    { commit: 'not-a-hash' },
+    { entry: 'C:/outside.js' },
+    { entry: '../outside.js' },
+    { timeoutMs: -1 },
+  ])('rejects unsafe runtime configuration %j', (override) => {
+    expect(() => parseFrameworkConfig({
+      framework: { repository, commit, ...override },
+    })).toThrow()
+  })
+
   it('reuses a cached runtime when commit and entry match', async () => {
     const cacheDir = await tempDir()
     const bytes = await archive()

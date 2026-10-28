@@ -15,7 +15,10 @@ describe('application composition', () => {
     const target = document.createElement('div')
     document.body.append(target)
     const preset = createDefaultPreset().map(entry => entry.manifest?.id === 'framework:wasm'
-      ? { ...entry, config: { preload: false } }
+      ? {
+          ...entry,
+          config: { preload: false },
+        }
       : entry)
     const app = await createFrameworkApp({
       el: target,

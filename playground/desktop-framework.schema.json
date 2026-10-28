@@ -22,6 +22,8 @@
         "commit": {
           "type": "string",
           "minLength": 7,
+          "maxLength": 40,
+          "pattern": "^[0-9a-fA-F]{7,40}$",
           "description": "框架 commit，推荐完整 40 位哈希"
         },
         "mode": {
@@ -32,6 +34,7 @@
         },
         "entry": {
           "type": "string",
+          "minLength": 1,
           "default": "index.js",
           "description": "运行时入口文件（归档内相对路径）"
         },
@@ -55,8 +58,8 @@
           "description": "是否复用本地缓存"
         },
         "timeoutMs": {
-          "type": "integer",
-          "minimum": 1000,
+          "type": "number",
+          "exclusiveMinimum": 0,
           "default": 15000,
           "description": "下载与解析超时"
         },
