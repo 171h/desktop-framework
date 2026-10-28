@@ -91,7 +91,7 @@ ctx.effect(() => ctx.editor.registerDetachHandler('acme.document', (state) => {
 - `titlebar`：默认值，页签显示在标题栏中，Ribbon 内容仍位于标题栏下方；
 - `separate`：页签使用 Ribbon 自带的独立一行。
 
-设置持久化在 `ribbon.tabPlacement`。Ribbon 的「主页 → 功能区」组提供 **页签位置** 切换按钮；标题栏模式还会显示一个向下箭头按钮，便于快速移回独立一行。
+设置持久化在 `ribbon.tabPlacement`。Ribbon 的「视图 → 布局」组提供 **页签位置** 切换按钮；标题栏模式还会显示一个向下箭头按钮，便于快速移回独立一行。
 
 ```ts
 ctx.ribbon.setTabPlacement('separate')

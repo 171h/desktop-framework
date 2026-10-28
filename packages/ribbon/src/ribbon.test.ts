@@ -68,6 +68,8 @@ describe('ribbon', () => {
     ctx.ribbon.setTabPlacement('titlebar')
     expect(ctx.ribbon.tabPlacement).toBe('titlebar')
     expect(JSON.parse(backend.getItem('test:ribbon.tabPlacement') ?? 'null')).toBe('titlebar')
+    const layout = ctx.ribbon.tabs.find(tab => tab.id === 'view')?.groups.find(group => group.title === '布局')
+    expect(layout?.items.some(item => item.command === 'ribbon.toggleTabPlacement')).toBe(true)
     await ctx.kernel.dispose()
   })
 
@@ -83,10 +85,18 @@ describe('ribbon', () => {
         checked = !checked
       },
     })
-    let item = ctx.ribbon.tabs.find(tab => tab.id === 'view')?.groups[0].items[0]
+    let item = ctx.ribbon.tabs
+      .find(tab => tab.id === 'view')
+      ?.groups
+      .flatMap(group => group.items)
+      .find(candidate => candidate.command === 'test.toggle')
     expect(item?.pressed).toBe(false)
     checked = true
-    item = ctx.ribbon.tabs.find(tab => tab.id === 'view')?.groups[0].items[0]
+    item = ctx.ribbon.tabs
+      .find(tab => tab.id === 'view')
+      ?.groups
+      .flatMap(group => group.items)
+      .find(candidate => candidate.command === 'test.toggle')
     expect(item?.pressed).toBe(true)
     await ctx.kernel.dispose()
   })
