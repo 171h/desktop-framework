@@ -54,7 +54,6 @@ onMounted(() => {
     ctx.on('command/failed', (id, error) => append('error', 'command', `${id}：${error instanceof Error ? error.message : String(error)}`)),
     ctx.on('workbench/workspace-applied', workspace => append('info', 'workbench', `切换到工作区「${workspace.name}」`)),
     ctx.on('ui/theme-changed', theme => append('info', 'ui', `主题切换为 ${theme}`)),
-    ctx.on('model/opened', id => append('info', 'model', `打开 ${id}`)),
   )
 })
 

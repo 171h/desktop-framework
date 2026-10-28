@@ -38,14 +38,6 @@ declare module 'cordis' {
     'ui/theme-changed': (theme: ThemeId) => void
     /** 通知新增。 */
     'notification/added': (id: number) => void
-    /** 模型格式注册。 */
-    'model/format-registered': (format: ModelFormatDescriptor) => void
-    /** 模型打开。 */
-    'model/opened': (documentId: string) => void
-    /** 模型关闭。 */
-    'model/closed': (documentId: string) => void
-    /** 选择变化。 */
-    'model/selection-changed': (documentId: string, selected: readonly number[]) => void
     /** Electron 窗口最大化状态变化。 */
     'electron/window-state': (state: WindowState) => void
   }
@@ -322,17 +314,6 @@ export interface FrameworkNotification {
   level: NotificationLevel
   /** 自动关闭毫秒数；0 表示不自动关闭。 */
   timeout?: number
-}
-
-/** 模型格式描述。 */
-export interface ModelFormatDescriptor {
-  id: string
-  name: string
-  extensions: string[]
-  mimeTypes?: string[]
-  description?: string
-  /** 是否由 WASM 提供。 */
-  wasm?: boolean
 }
 
 /** Electron 窗口状态。 */

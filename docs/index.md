@@ -22,7 +22,7 @@ hero:
 features:
   - icon: 🧩
     title: 一切皆插件
-    details: 内核、命令、Ribbon、面板、画布、模型格式、Electron 主进程能力均由 Cordis 插件提供，可运行时加载、卸载与替换。
+    details: 内核、命令、Ribbon、面板、画布、Electron 主进程能力均由 Cordis 插件提供，可运行时加载、卸载与替换。
   - icon: 🎛️
     title: AutoDesk 式工作台
     details: 应用菜单、快速访问工具栏、Ribbon、停靠面板与状态栏共享统一坐标系，支持保存和切换工作区。
