@@ -25,7 +25,6 @@ export interface RegisterCommandOptions {
 /** 命令注册结果。 */
 interface Registration {
   definition: CommandDefinition
-  previous?: CommandDefinition
 }
 
 /** 命令服务。 */
@@ -33,6 +32,7 @@ export class CommandService extends Service {
   static inject: string[] = []
 
   private readonly registry = reactive(new Map<string, CommandDefinition>())
+  private readonly registrations = new Map<string, Registration[]>()
 
   constructor(ctx: Context) {
     super(ctx, 'commands')
@@ -55,7 +55,10 @@ export class CommandService extends Service {
       throw new Error(`命令 ${definition.id} 已注册；如需覆盖请传入 { override: true }`)
     }
     const stored = markRaw(definition)
-    const registration: Registration = { definition: stored, previous }
+    const registration: Registration = { definition: stored }
+    const stack = this.registrations.get(definition.id) ?? []
+    stack.push(registration)
+    this.registrations.set(definition.id, stack)
     this.registry.set(definition.id, stored)
     this.ctx.emit('command/registered', stored)
     let disposed = false
@@ -65,25 +68,41 @@ export class CommandService extends Service {
           return
         }
         disposed = true
-        if (this.registry.get(definition.id) !== stored) {
+        const index = stack.indexOf(registration)
+        stack.splice(index, 1)
+        if (index !== stack.length) {
           return
         }
-        if (registration.previous) {
-          this.registry.set(definition.id, registration.previous)
+        const restored = stack.at(-1)?.definition
+        if (restored) {
+          this.registry.set(definition.id, restored)
         }
         else {
           this.registry.delete(definition.id)
+          this.registrations.delete(definition.id)
         }
         this.ctx.emit('command/unregistered', stored.id)
+        if (restored) {
+          this.ctx.emit('command/registered', restored)
+        }
       },
     }
   }
 
   /** 批量注册。 */
   registerMany(definitions: CommandDefinition[], options: RegisterCommandOptions = {}): IDisposable {
-    const disposables = definitions.map(definition => this.register(definition, options))
+    const disposables: IDisposable[] = []
+    try {
+      for (const definition of definitions) {
+        disposables.push(this.register(definition, options))
+      }
+    }
+    catch (error) {
+      disposables.reverse().forEach(disposable => disposable.dispose())
+      throw error
+    }
     return {
-      dispose: () => disposables.forEach(disposable => disposable.dispose()),
+      dispose: () => [...disposables].reverse().forEach(disposable => disposable.dispose()),
     }
   }
 

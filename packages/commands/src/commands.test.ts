@@ -9,6 +9,43 @@ async function setup(): Promise<Awaited<ReturnType<typeof createFrameworkContext
 }
 
 describe('commands', () => {
+  it('does not resurrect an override that was disposed out of order', async () => {
+    const ctx = await setup()
+    const base = ctx.commands.register({
+      id: 'stack',
+      title: 'Base',
+      run: () => 'base',
+    })
+    const middle = ctx.commands.register({
+      id: 'stack',
+      title: 'Middle',
+      run: () => 'middle',
+    }, { override: true })
+    const top = ctx.commands.register({
+      id: 'stack',
+      title: 'Top',
+      run: () => 'top',
+    }, { override: true })
+    middle.dispose()
+    top.dispose()
+    expect(await ctx.commands.execute('stack')).toBe('base')
+    base.dispose()
+    expect(ctx.commands.has('stack')).toBe(false)
+    await ctx.kernel.dispose()
+  })
+
+  it('rolls back a batch if a later registration fails', async () => {
+    const ctx = await setup()
+    const command = {
+      id: 'batch',
+      title: 'Batch',
+      run: () => undefined,
+    }
+    expect(() => ctx.commands.registerMany([command, command])).toThrow('已注册')
+    expect(ctx.commands.has('batch')).toBe(false)
+    await ctx.kernel.dispose()
+  })
+
   it('registers and executes commands', async () => {
     const ctx = await setup()
     let value = 0

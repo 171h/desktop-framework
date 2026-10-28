@@ -16,6 +16,10 @@ import type { Context, Fiber, Plugin } from 'cordis'
 import { errorMessage } from '@df/core'
 import { Context as CordisContext, Service } from 'cordis'
 
+// Cordis 的 FiberState 是 ambient const enum，verbatimModuleSyntax 无法导入。
+const FIBER_ACTIVE = 2
+const FIBER_FAILED = 3
+
 /** 框架版本，与根 package.json 同步维护。 */
 export const version = '0.1.0'
 
@@ -34,6 +38,7 @@ interface KernelRecord {
   info: KernelPluginInfo
   entry: PluginEntry
   fiber?: Fiber
+  started: number
 }
 
 /** 内核服务。 */
@@ -52,31 +57,58 @@ export class KernelService extends Service implements KernelServiceContract {
     this.options = options
     this.version = options.version ?? version
     this.environment = options.environment ?? detectEnvironment()
+    ctx.on('internal/status', (fiber) => {
+      for (const record of this.records.values()) {
+        if (record.fiber === fiber) {
+          this.syncStatus(record)
+        }
+      }
+    })
   }
 
   get plugins(): readonly KernelPluginInfo[] {
     return [
       ...this.records.values(),
-    ].map(record => record.info)
+    ].map(record => ({ ...record.info }))
   }
 
   async load(entries: PluginEntry[]): Promise<readonly KernelPluginInfo[]> {
-    const result: KernelPluginInfo[] = []
+    if (this.disposed) {
+      throw new Error('内核已释放，无法继续加载插件')
+    }
+    // 先检查并注册整批插件，再等待激活；消费者可以出现在提供者之前。
+    const ids = new Set(this.records.keys())
     for (const entry of entries) {
-      const info = await this.loadOne(entry)
-      result.push(info)
-      if (info.status === 'failed' && this.options.strict) {
-        throw new Error(`插件 ${info.id} 加载失败：${info.error}`)
+      const { id } = resolveManifest(entry)
+      if (ids.has(id)) {
+        throw new Error(`插件 ${id} 已加载；请先卸载或使用 reload`)
       }
+      ids.add(id)
+    }
+    const records = entries.map(entry => this.register(entry))
+    await Promise.all(records.map(async (record) => {
+      try {
+        await record.fiber?.await()
+        this.syncStatus(record)
+      }
+      catch (error) {
+        this.fail(record, error)
+      }
+    }))
+    const result = records.map(record => ({ ...record.info }))
+    const failed = result.find(info => info.status === 'failed')
+    if (failed && this.options.strict) {
+      throw new Error(`插件 ${failed.id} 加载失败：${failed.error}`)
     }
     this.ctx.emit('framework/ready')
     return result
   }
 
   async loadOne(entry: PluginEntry): Promise<KernelPluginInfo> {
-    if (this.disposed) {
-      throw new Error('内核已释放，无法继续加载插件')
-    }
+    return (await this.load([entry]))[0]
+  }
+
+  private register(entry: PluginEntry): KernelRecord {
     const manifest = resolveManifest(entry)
     if (this.records.has(manifest.id)) {
       throw new Error(`插件 ${manifest.id} 已加载；请先卸载或使用 reload`)
@@ -89,25 +121,25 @@ export class KernelService extends Service implements KernelServiceContract {
       source: entry.source ?? 'builtin',
       status: 'pending',
     }
-    const record: KernelRecord = { info, entry }
+    const record: KernelRecord = {
+      info,
+      entry,
+      started: performance.now(),
+    }
     this.records.set(manifest.id, record)
-    const started = performance.now()
     try {
-      const fiber = await this.invoke(entry)
-      record.fiber = fiber
-      info.status = 'loaded'
-      info.durationMs = performance.now() - started
-      this.ctx.emit('kernel/plugin-loaded', { ...info })
-      return { ...info }
+      const fork = this.ctx.plugin(entry.plugin, entry.config)
+      // 保存原始 fiber，而非 Cordis 返回的 PromiseLike 包装对象。
+      record.fiber = fork.ctx.fiber
     }
     catch (error) {
       info.status = 'failed'
-      info.durationMs = performance.now() - started
+      info.durationMs = performance.now() - record.started
       info.error = errorMessage(error)
       this.ctx.emit('kernel/plugin-failed', { ...info })
       this.ctx.logger.error(`[kernel] 插件 ${manifest.id} 加载失败：${info.error}`)
-      return { ...info }
     }
+    return record
   }
 
   async unload(id: string): Promise<void> {
@@ -151,12 +183,35 @@ export class KernelService extends Service implements KernelServiceContract {
     await this.ctx.fiber.dispose()
   }
 
-  private async invoke(entry: PluginEntry): Promise<Fiber> {
-    const register = this.ctx.plugin as unknown as (
-      plugin: Plugin,
-      config?: unknown,
-    ) => Fiber & PromiseLike<Fiber>
-    return register.call(this.ctx, entry.plugin, entry.config)
+  private syncStatus(record: KernelRecord): void {
+    if (!record.fiber || record.info.status === 'failed') {
+      return
+    }
+    if (record.fiber.state === FIBER_FAILED) {
+      void record.fiber.await().catch(error => this.fail(record, error))
+      return
+    }
+    const status = record.fiber.state === FIBER_ACTIVE
+      ? 'loaded'
+      : 'pending'
+    if (record.info.status === status) {
+      return
+    }
+    record.info.status = status
+    record.info.durationMs = performance.now() - record.started
+    if (status === 'loaded') {
+      this.ctx.emit('kernel/plugin-loaded', { ...record.info })
+    }
+  }
+
+  private fail(record: KernelRecord, error: unknown): void {
+    if (record.info.status === 'failed') {
+      return
+    }
+    record.info.error = errorMessage(error)
+    record.info.status = 'failed'
+    record.info.durationMs = performance.now() - record.started
+    this.ctx.emit('kernel/plugin-failed', { ...record.info })
   }
 }
 
