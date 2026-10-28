@@ -85,7 +85,7 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
 
 ### Rust / WASM 热路径
 
-`df_fuzzy` 提供命令面板与插件搜索使用的模糊匹配内核；`df_wasm` 负责把结果以紧凑 JSON 暴露给前端。命令数量很大时，搜索仍在 WASM 线性内存中完成，主线程只处理最终结果，避免在 Vue 响应式对象上进行大列表排序。
+`df_fuzzy` 提供模糊匹配内核；`df_wasm` 通过 JSON 暴露给前端。当前调用仍在渲染主线程执行；WASM 不可用时使用 TypeScript 降级搜索。大型数据负载还需要基准测试及 Worker 调度，详见架构审查中的性能边界。
 
 ### 借鉴 VS Code 的实现
 
@@ -108,9 +108,10 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
   "framework": {
     "repository": "https://github.com/171h/desktop-framework",
     "commit": "0123456789abcdef0123456789abcdef01234567",
-    "runtime": {
-      "asset": "desktop-framework-runtime-{shortCommit}.tar.gz",
-      "entry": "index.js",
+    "mode": "remote",
+    "entry": "index.js",
+    "artifact": {
+      "url": "{repository}/releases/download/framework-{shortCommit}/desktop-framework-runtime-{shortCommit}.tar.gz",
       "integrity": "sha256-..."
     }
   }
@@ -129,6 +130,7 @@ Ribbon、应用菜单、快速访问工具栏、快捷键和命令面板共享�
 
 ## 文档
 
+- [架构审查与调整](./docs/architecture/review.md)：已修复的问题、宿主扩展方式与当前能力边界。
 - [架构总览](./docs/architecture/overview.md)
 - [AutoDesk 设计借鉴](./docs/design/autodesk.md)
 - [插件系统](./docs/guide/plugins.md)

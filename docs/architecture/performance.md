@@ -10,7 +10,7 @@
 
 ### Windows 特定项
 
-与 VS Code 相同，在 Windows 上关闭 `CalculateNativeWinOcclusion`，避免窗口被系统判定遮挡后降频。
+默认保留 Chromium 的原生遮挡计算和后台节流，避免被遮挡或最小化的工作台继续消耗资源。需要持续后台动画的宿主可显式覆盖窗口的 `webPreferences.backgroundThrottling`，并针对自己的负载测量耗电和交互延迟。
 
 ## 渲染
 
@@ -55,4 +55,4 @@
 - 插件视图使用异步组件与 `markRaw`，避免 Vue 深度代理。
 - 大表格使用虚拟滚动（nusys-ui 表格或自定义窗口化）。
 - 远程插件按需 import，不要把所有业务塞进首屏 bundle。
-- CPU 密集算法继续放入独立 Rust crate，通过 `df_wasm` 暴露，保持主线程只做 UI。
+- CPU 密集算法放入独立 Rust crate；大负载还需由 Worker 调用 WASM。当前 `df_wasm` 搜索在渲染主线程同步执行，尚不能保证主线程只做 UI。

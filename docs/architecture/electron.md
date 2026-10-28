@@ -43,7 +43,7 @@ new BrowserWindow({
     contextIsolation: true,
     sandbox: true,
     nodeIntegration: false,
-    backgroundThrottling: false,
+    backgroundThrottling: true,
     v8CacheOptions: 'code',
     preload,
   },
@@ -53,7 +53,7 @@ new BrowserWindow({
 - `show: false` + `ready-to-show`：避免白屏和未完成布局的闪烁。
 - `paintWhenInitiallyHidden`：允许离屏首帧，减少显示延迟。
 - `v8CacheOptions: 'code'`：缓存编译后的代码，缩短二次启动。
-- `backgroundThrottling: false`：窗口失焦时保持渲染节奏，适合长时间运行的专业工具。
+- `backgroundThrottling: true`：后台窗口允许 Chromium 节流，减少资源消耗；有持续后台渲染需求的宿主可以显式覆盖。
 - 窗口位置/尺寸/最大化状态持久化，并进行显示器可见性校验。
 
 ## 原生窗口控制

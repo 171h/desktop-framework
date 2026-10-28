@@ -62,6 +62,7 @@ export default defineConfig({
           text: '架构',
           items: [
             { text: '总览', link: '/architecture/overview' },
+            { text: '架构审查与调整', link: '/architecture/review' },
             { text: '源码布局', link: '/architecture/source-layout' },
             { text: '插件模型', link: '/architecture/plugin-model' },
             { text: 'Electron 宿主', link: '/architecture/electron' },

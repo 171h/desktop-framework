@@ -27,14 +27,14 @@
 ## 缓存键
 
 ```text
-<userData>/framework/<commit前16位>-<仓库SHA256前8位>/
+<userData>/framework/<配置commit>-<制品配置SHA256前8位>/
 ├─ manifest.json
 ├─ index.js
 ├─ style.css
 └─ assets/...
 ```
 
-仓库哈希避免同一 commit 在不同 fork 中冲突；缓存命中时只读取 manifest 并检查入口是否存在。
+制品配置哈希包含仓库、制品地址、入口和 integrity，变更制品或校验要求后不会复用旧缓存。缓存命中时验证 manifest 的完整 commit、入口和样式的实际文件路径。旧格式缓存不会自动迁移。
 
 ## 下载与校验
 
@@ -49,7 +49,9 @@
 任何一步失败：
 
 - `mode: auto` → 记录 `fallbackReason`，使用宿主内置版本；
-- `mode: remote` → 记录错误，不静默切换到其他 commit；宿主渲染层仍可选择加载本地入口以保证可用性。
+- `mode: remote` → 启动失败，不静默切换到其他 commit。
+
+离线模式仍优先读取有效缓存。远程模块已经选定后，样式、导入或应用初始化失败均终止启动，以免混用两个运行时的全局组件和服务。
 
 ## 运行时归档
 

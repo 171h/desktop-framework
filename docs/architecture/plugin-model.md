@@ -86,7 +86,7 @@ await ctx.kernel.reload('acme:my-plugin')
 }
 ```
 
-失败插件默认不会阻塞其他插件；`strict: true` 时立即抛出。
+每批先注册，再等待本批及子插件完成当前可进行的激活。缺少服务依赖时保留 `pending`；依赖服务出现后由 Cordis 激活，消失后暂停。`strict: true` 在本批稳定后对失败插件抛出错误；Electron 宿主采用严格模式。
 
 ## 贡献点
 
