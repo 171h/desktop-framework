@@ -1,219 +1,123 @@
 <script setup lang="ts">
-import type { SidebarId } from '@df/core'
+import type { FloatingPanel } from '@df/core'
 import { clamp } from '@df/core'
 import { useCordis } from '@df/vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import DockPanel from './DockPanel.vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import DockNodeView from './DockNodeView.vue'
 
-const props = defineProps<{
-  location: SidebarId
-}>()
-
+const props = defineProps<{ panel: FloatingPanel }>()
 const ctx = useCordis()
 const root = ref<HTMLElement>()
-const state = computed(() => ctx.workbench.layout[props.location])
-const floating = computed(() => state.value.floating)
-
-const style = computed(() => {
-  const value = floating.value
-  if (!value) {
-    return {}
-  }
-  return {
-    left: `${value.x}px`,
-    top: `${value.y}px`,
-    width: `${value.width}px`,
-    height: `${value.height}px`,
-  }
-})
-
-type ResizeEdge = 'e' | 's' | 'se'
-
-interface ResizeSession {
-  edge: ResizeEdge
-  startX: number
-  startY: number
-  x: number
-  y: number
-  width: number
-  height: number
-  maxWidth: number
-  maxHeight: number
-}
-
-let resize: ResizeSession | undefined
+const style = computed(() => ({
+  left: `${props.panel.geometry.x}px`,
+  top: `${props.panel.geometry.y}px`,
+  width: `${props.panel.geometry.width}px`,
+  height: `${props.panel.geometry.height}px`,
+}))
+const edges = [
+  'n',
+  's',
+  'e',
+  'w',
+  'ne',
+  'nw',
+  'se',
+  'sw',
+] as const
+type Edge = typeof edges[number]
 let observer: ResizeObserver | undefined
+let stop: (() => void) | undefined
 
-function fitToWorkbench(): void {
-  const value = floating.value
-  const workbench = root.value?.closest<HTMLElement>('.df-workbench')
-  if (!value || !workbench) {
+function fit(): void {
+  const bounds = root.value?.closest('.df-workbench')?.getBoundingClientRect()
+  if (!bounds)
     return
-  }
-  const rect = workbench.getBoundingClientRect()
-  const width = Math.min(value.width, Math.max(240, rect.width - 16))
-  const height = Math.min(value.height, Math.max(180, rect.height - 16))
-  const x = clamp(value.x, 0, Math.max(0, rect.width - width))
-  const y = clamp(value.y, 0, Math.max(0, rect.height - height))
-  if (width !== value.width || height !== value.height) {
-    ctx.workbench.resizeFloatingDock(props.location, width, height)
-  }
-  if (x !== value.x || y !== value.y) {
-    ctx.workbench.moveFloatingDock(props.location, x, y)
-  }
+  const value = props.panel.geometry
+  const width = Math.min(value.width, Math.max(200, bounds.width - 8))
+  const height = Math.min(value.height, Math.max(140, bounds.height - 8))
+  const x = clamp(value.x, 0, Math.max(0, bounds.width - width))
+  const y = clamp(value.y, 0, Math.max(0, bounds.height - height))
+  if (x !== value.x || y !== value.y || width !== value.width || height !== value.height)
+    ctx.workbench.setFloatingGeometry(props.panel.id, { x, y, width, height })
 }
 
-function onResizeMove(event: PointerEvent): void {
-  if (!resize) {
+function resize(event: PointerEvent, edge: Edge): void {
+  if (event.button !== 0)
     return
-  }
-  const dx = event.clientX - resize.startX
-  const dy = event.clientY - resize.startY
-  const width = resize.edge === 's'
-    ? resize.width
-    : clamp(resize.width + dx, 240, Math.max(240, resize.maxWidth))
-  const height = resize.edge === 'e'
-    ? resize.height
-    : clamp(resize.height + dy, 180, Math.max(180, resize.maxHeight))
-  ctx.workbench.resizeFloatingDock(props.location, width, height)
-}
-
-function stopResize(): void {
-  window.removeEventListener('pointermove', onResizeMove)
-  window.removeEventListener('pointerup', stopResize)
-  window.removeEventListener('pointercancel', stopResize)
-  window.removeEventListener('blur', stopResize)
-  document.body.classList.remove('df-dock-resizing')
-  resize = undefined
-}
-
-function startResize(event: PointerEvent, edge: ResizeEdge): void {
-  const value = floating.value
-  const workbench = root.value?.closest<HTMLElement>('.df-workbench')
-  if (event.button !== 0 || !value || !workbench) {
+  const bounds = root.value?.closest('.df-workbench')?.getBoundingClientRect()
+  if (!bounds)
     return
-  }
   event.preventDefault()
   event.stopPropagation()
-  stopResize()
-  const workRect = workbench.getBoundingClientRect()
-  resize = {
-    edge,
-    startX: event.clientX,
-    startY: event.clientY,
-    x: value.x,
-    y: value.y,
-    width: value.width,
-    height: value.height,
-    maxWidth: Math.max(240, workRect.width - value.x),
-    maxHeight: Math.max(180, workRect.height - value.y),
+  stop?.()
+  const original = { ...props.panel.geometry }
+  const start = { x: event.clientX, y: event.clientY }
+  const move = (current: PointerEvent): void => {
+    if (current.pointerId !== event.pointerId)
+      return
+    const dx = current.clientX - start.x
+    const dy = current.clientY - start.y
+    const value = { ...original }
+    if (edge.includes('e'))
+      value.width = clamp(original.width + dx, 200, bounds.width - original.x)
+    if (edge.includes('s'))
+      value.height = clamp(original.height + dy, 140, bounds.height - original.y)
+    if (edge.includes('w')) {
+      value.x = clamp(original.x + dx, 0, original.x + original.width - 200)
+      value.width = original.x + original.width - value.x
+    }
+    if (edge.includes('n')) {
+      value.y = clamp(original.y + dy, 0, original.y + original.height - 140)
+      value.height = original.y + original.height - value.y
+    }
+    ctx.workbench.setFloatingGeometry(props.panel.id, value)
+  }
+  stop = () => {
+    window.removeEventListener('pointermove', move)
+    window.removeEventListener('pointerup', stop!)
+    window.removeEventListener('pointercancel', stop!)
+    window.removeEventListener('blur', stop!)
+    document.body.classList.remove('df-dock-resizing')
+    stop = undefined
   }
   document.body.classList.add('df-dock-resizing')
-  window.addEventListener('pointermove', onResizeMove)
-  window.addEventListener('pointerup', stopResize)
-  window.addEventListener('pointercancel', stopResize)
-  window.addEventListener('blur', stopResize)
+  window.addEventListener('pointermove', move)
+  window.addEventListener('pointerup', stop)
+  window.addEventListener('pointercancel', stop)
+  window.addEventListener('blur', stop)
 }
-
-onMounted(async () => {
-  await nextTick()
-  fitToWorkbench()
-  const workbench = root.value?.closest<HTMLElement>('.df-workbench')
-  if (workbench) {
-    observer = new ResizeObserver(() => fitToWorkbench())
+onMounted(() => {
+  fit()
+  const workbench = root.value?.closest('.df-workbench')
+  observer = new ResizeObserver(fit)
+  if (workbench)
     observer.observe(workbench)
-  }
 })
-
 onBeforeUnmount(() => {
-  stopResize()
+  stop?.()
   observer?.disconnect()
 })
 </script>
 
 <template>
-  <div
-    v-if="floating"
-    ref="root"
-    class="df-floating-dock"
-    role="region"
-    :aria-label="location === 'left' ? '浮动左侧栏' : '浮动右侧栏'"
-    :style="style"
-  >
-    <DockPanel :location="location" />
-    <span
-      class="df-floating-dock__resize df-floating-dock__resize--e"
-      @pointerdown="startResize($event, 'e')"
-    />
-    <span
-      class="df-floating-dock__resize df-floating-dock__resize--s"
-      @pointerdown="startResize($event, 's')"
-    />
-    <span
-      class="df-floating-dock__resize df-floating-dock__resize--se"
-      @pointerdown="startResize($event, 'se')"
-    />
+  <div ref="root" class="df-floating-dock" :data-floating-id="panel.id" :style="style" role="region" aria-label="浮动面板">
+    <DockNodeView :node="panel.node" />
+    <span v-for="edge in edges" :key="edge" class="df-floating-dock__resize" :class="`df-floating-dock__resize--${edge}`" @pointerdown="resize($event, edge)" />
   </div>
 </template>
 
 <style scoped>
-.df-floating-dock {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid var(--df-border-strong);
-  border-radius: 8px;
-  background: var(--df-surface);
-  box-shadow:
-    0 22px 48px var(--df-shadow),
-    0 0 0 1px color-mix(in srgb, var(--df-accent) 10%, transparent);
-  pointer-events: auto;
-}
-
-.df-floating-dock :deep(.df-dock) {
-  border-radius: 7px;
-}
-
-.df-floating-dock__resize {
-  position: absolute;
-  z-index: 2;
-}
-
-.df-floating-dock__resize--e {
-  top: 0;
-  right: 0;
-  bottom: 10px;
-  width: 7px;
-  cursor: ew-resize;
-}
-
-.df-floating-dock__resize--s {
-  right: 10px;
-  bottom: 0;
-  left: 0;
-  height: 7px;
-  cursor: ns-resize;
-}
-
-.df-floating-dock__resize--se {
-  right: 0;
-  bottom: 0;
-  width: 14px;
-  height: 14px;
-  cursor: nwse-resize;
-}
-
-.df-floating-dock__resize--se::after {
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 6px;
-  height: 6px;
-  border-right: 1px solid var(--df-faint);
-  border-bottom: 1px solid var(--df-faint);
-  content: '';
-}
+.df-floating-dock { position: absolute; min-width: 0; min-height: 0; border: 1px solid var(--df-border-strong); border-radius: 6px; overflow: hidden; background: var(--df-surface); box-shadow: 0 16px 40px var(--df-shadow); pointer-events: auto; }
+.df-floating-dock__resize { position: absolute; z-index: 4; touch-action: none; }
+.df-floating-dock__resize--e, .df-floating-dock__resize--w { top: 8px; bottom: 8px; width: 5px; cursor: ew-resize; }
+.df-floating-dock__resize--e { right: 0; }
+.df-floating-dock__resize--w { left: 0; }
+.df-floating-dock__resize--n, .df-floating-dock__resize--s { left: 8px; right: 8px; height: 5px; cursor: ns-resize; }
+.df-floating-dock__resize--n { top: 0; }
+.df-floating-dock__resize--s { bottom: 0; }
+.df-floating-dock__resize--ne, .df-floating-dock__resize--nw, .df-floating-dock__resize--se, .df-floating-dock__resize--sw { width: 9px; height: 9px; }
+.df-floating-dock__resize--ne { top: 0; right: 0; cursor: nesw-resize; }
+.df-floating-dock__resize--nw { top: 0; left: 0; cursor: nwse-resize; }
+.df-floating-dock__resize--se { bottom: 0; right: 0; cursor: nwse-resize; }
+.df-floating-dock__resize--sw { bottom: 0; left: 0; cursor: nesw-resize; }
 </style>

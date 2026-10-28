@@ -267,6 +267,8 @@ export interface ViewDefinition {
   pluginId?: string
   /** Vue 组件；由宿主 UI 渲染，非 Vue 消费者可以忽略。 */
   component?: object
+  /** 显示 / 隐藏面板的快捷键；未指定时前九个面板使用 Mod+Alt+1…9。 */
+  keybinding?: string
 }
 
 /** 侧边栏 id。 */
@@ -281,6 +283,35 @@ export interface FloatingDockState {
   y: number
   width: number
   height: number
+}
+
+export type DockEdge = 'left' | 'right' | 'bottom'
+export type DockPlacement = 'left' | 'right' | 'top' | 'bottom' | 'center'
+export interface DockGroupNode {
+  type: 'group'
+  id: string
+  views: string[]
+  activeView?: string
+}
+export interface DockSplitNode {
+  type: 'split'
+  id: string
+  orientation: 'horizontal' | 'vertical'
+  ratio: number
+  children: [DockNode, DockNode]
+}
+export type DockNode = DockGroupNode | DockSplitNode
+export interface FloatingPanel {
+  id: string
+  node: DockNode
+  geometry: FloatingDockState
+  lastSide: DockEdge
+}
+export interface DockingLayout {
+  version: 2
+  roots: Record<DockEdge, DockNode | null>
+  floating: FloatingPanel[]
+  hidden: string[]
 }
 
 /** 停靠面板状态。 */
@@ -298,6 +329,8 @@ export interface DockState {
 
 /** 工作台布局。 */
 export interface WorkbenchLayout {
+  /** 可组合面板布局；省略时自动从旧版左右 / 底部侧栏迁移。 */
+  docking?: DockingLayout
   left: DockState
   right: DockState
   bottom: DockState

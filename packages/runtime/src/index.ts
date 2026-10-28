@@ -15,8 +15,15 @@ export {
 } from '@df/core'
 export type {
   CommandDefinition,
+  DockEdge,
+  DockGroupNode,
+  DockingLayout,
+  DockNode,
+  DockPlacement,
   DockSide,
+  DockSplitNode,
   FloatingDockState,
+  FloatingPanel,
   FrameworkPluginManifest,
   PluginEntry,
   RibbonPlacement,

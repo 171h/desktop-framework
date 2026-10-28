@@ -1,53 +1,89 @@
-# 浮动侧栏与停靠
+# 面板停靠、分组与恢复
 
-左右侧栏采用 AutoDesk 风格的浮动面板设计：既可以停靠在窗口两侧，也可以分离为浮动面板，在工作台内自由移动、缩放和隐藏。浮动面板保留在主窗口工作台内，不创建独立操作系统窗口，因此跨平台布局与状态恢复保持一致。
+工作台支持按面板自由组合布局：同一侧可以容纳多个面板，面板之间可以左右并排、上下堆叠，或合并为标签组。左侧、右侧和底部共用同一套布局机制；浮动面板位于主窗口工作区内。
 
-## 交互方式
+## 拖动与吸附
 
-- 拖动侧栏标题栏左侧的握柄或空白区域，可将停靠侧栏分离为浮动面板。
-- 拖动浮动面板标题栏可自由移动。
-- 靠近工作台左侧或右侧边缘时会出现停靠提示，释放后停靠到对应一侧。
-- 浮动面板标题栏提供「停靠到左侧」「停靠到右侧」「隐藏面板」按钮。
-- 将鼠标移到浮动面板右边缘、下边缘或右下角，可调整面板尺寸。
-- 停靠侧栏标题栏提供「浮动侧栏」和「隐藏面板」按钮。
-- 「视图」菜单也提供「浮动左侧栏」「浮动右侧栏」命令。
-- 隐藏后可通过「视图」菜单、Ribbon 或 `Mod+B` / `Mod+Alt+B` 恢复；浮动位置与尺寸会保留。
+- 拖动标题栏握柄或空白处，移动整个标签组；拖动某个标签，可单独拆出该面板。
+- 拖到另一个面板的中心，预览显示「合并为标签组」，释放后合并。
+- 拖到面板左 / 右边缘，释放后左右并排；拖到上 / 下边缘，释放后上下堆叠。分割可以继续嵌套。
+- 拖到工作区左、右或底部边缘，释放后停靠。目标侧已有面板会保留，新组追加为分割区域。
+- 浮动面板接近工作区边界或其他浮动面板边缘时会自动对齐。
+- 拖动时按住 `Ctrl` 暂停吸附及停靠；按 `Esc` 取消本次拖动，恢复拖动前的分组和位置。指针取消或窗口失焦也会回退本次拖动。
+- 拖动分割线调整并排宽度或堆叠高度；浮动面板的四边、四角均可调整尺寸。
 
-如果目标侧已经有停靠侧栏，原侧栏会自动转为浮动面板，不会丢失视图。
+界面采用落点预览，并在释放时提交分组。这个交互参考了 [AutoCAD 的停靠、浮动与锚定面板](https://help.autodesk.com/cloudhelp/2020/ENG/AutoCAD-Core/files/GUID-893A3C0A-C735-49E4-878E-C8641DEAD618.htm)。
 
-## 服务 API
+## 隐藏与重新显示
+
+- 标题栏「隐藏当前面板」按钮只隐藏当前标签，组内其他面板仍保留。
+- 「收起标签组」按钮隐藏组内全部可见面板。
+- 隐藏后，工作区边缘会出现带名称的悬浮恢复按钮。点击后回到原来的分组或浮动位置。
+- `Mod+Alt+P` 恢复最近隐藏的面板。前九个注册的面板默认使用 `Mod+Alt+1` 到 `Mod+Alt+9` 切换显示 / 隐藏，也可在「视图 → 面板」菜单和命令面板中按名称操作。
+- `Mod+B`、`Mod+Alt+B`、`Mod+J` 切换左侧、右侧、底部区域；该区域的浮动容器也会一起隐藏或恢复。
+
+`Mod` 在 Windows / Linux 为 Ctrl，在 macOS 为 Command。插件可通过 `ViewDefinition.keybinding` 为面板指定固定快捷键。
 
 ```ts
-import type { SidebarId } from '@df/core'
-
-// 将侧栏分离为浮动面板
-ctx.workbench.floatDock('left', {
-  x: 120,
-  y: 96,
-  width: 320,
-  height: 480,
+ctx.workbench.registerView({
+  id: 'acme.properties',
+  title: '业务属性',
+  location: 'right',
+  keybinding: 'Mod+Alt+8',
+  component: PropertiesView,
 })
-
-// 停靠到指定一侧
-ctx.workbench.dockSidebar('left', 'right')
-
-// 查询某一侧当前停靠的侧栏
-const group = ctx.workbench.dockedSidebar('right')
 ```
 
-浮动坐标相对于工作台内容区（`.df-workbench`），不包含标题栏、Ribbon 和状态栏。界面会自动把浮动面板限制在工作台可见范围内。
+## 保存与恢复
 
-## 布局状态
+布局自动保存分割方向和比例、标签成员与活动标签、浮动位置和尺寸、隐藏状态，以及侧边停靠区的宽度 / 高度。保存自定义工作区时也会包含这些信息。
 
-`DockState` 新增字段：
+日常操作使用防抖写入，页面退出、重载及服务释放时会同步保存最后一次操作。重启后自动恢复；窗口变小时，浮动容器会限制到可见工作区，避免标题栏落在窗口外。
 
-| 字段 | 说明 |
+旧版仅有左右侧栏的布局会自动迁移。尚未注册或暂时卸载的插件面板不会渲染，但它的布局信息会保留；插件应保持面板 ID 稳定，以便重新加载后恢复原位。
+
+## 插件 API
+
+`registerView()` 的 `location` 代表初始位置。用户移动后，以 `ctx.workbench.docking` 为当前布局依据，面板定义无需改写。
+
+```ts
+import { groupForView } from '@df/workbench'
+
+const source = groupForView(ctx.workbench.docking, 'acme.properties')
+const target = groupForView(ctx.workbench.docking, 'explorer')
+
+if (source && target) {
+  // left / right：并排；top / bottom：堆叠；center：标签合并。
+  ctx.workbench.movePanel(source.id, target.id, 'bottom', 'acme.properties')
+}
+
+ctx.workbench.hidePanel('acme.properties')
+ctx.workbench.openView('acme.properties') // 恢复并激活，不改变布局位置。
+```
+
+主要接口：
+
+| 接口 | 功能 |
 | --- | --- |
-| `side` | 侧栏当前停靠侧：`left` 或 `right` |
-| `floating` | 浮动几何；为 `null` 时表示已停靠 |
+| `movePanel(groupId, targetId, placement, viewId?)` | 移动整个组或某个标签，分割或合并到目标组 |
+| `floatPanel(groupId, geometry, viewId?)` | 分离为浮动标签组，返回新组 ID |
+| `dockPanel(groupId, side)` | 停靠到 left / right / bottom，保留目标侧其他面板 |
+| `floatRegion(side)` | 将整个停靠区连同分割关系放入浮动容器 |
+| `hidePanel(viewId)` / `showPanel(viewId)` | 隐藏 / 恢复面板 |
+| `activatePanel(groupId, viewId)` | 切换组内活动标签 |
+| `setPanelRatio(splitId, ratio)` | 修改分割比例 |
+| `setFloatingGeometry(floatingId, geometry)` | 修改浮动容器的位置与大小 |
 
-`visible`、`size`、`activeView` 仍然有效。保存工作区时，浮动位置、尺寸和停靠侧都会一并保存；恢复工作区或重启应用后保持原布局。
+浮动坐标相对于 `.df-workbench`，不包含标题栏、Ribbon 和状态栏。旧 `floatDock` / `dockSidebar` API 为兼容保留；需要操作用户重组后的面板时，请使用基于组 ID 的接口。
 
-## 可扩展性
+## 布局数据
 
-侧栏中的视图仍由各插件通过 `workbench.registerView()` 注册。浮动和停靠只改变容器布局，不改变视图定义；插件不需要感知侧栏是否浮动。
+`WorkbenchLayout.docking` 是版本为 2 的可序列化布局：
+
+- `roots.left / right / bottom` 为各停靠区根节点。
+- `group` 节点存放面板 ID 列表和活动标签。
+- `split` 节点存放两个子节点、方向与比例。
+- `floating` 保存浮动容器的节点树、几何和原停靠侧。
+- `hidden` 保存隐藏的面板 ID；隐藏不移除节点。
+
+恢复时会校验节点深度和数量、去除重复成员，并限制比例与几何范围。插件不应直接修改布局树，优先使用工作台服务方法。

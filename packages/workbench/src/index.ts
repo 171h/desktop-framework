@@ -9,6 +9,11 @@
  */
 import type {
   CommandDefinition,
+  DockEdge,
+  DockGroupNode,
+  DockingLayout,
+  DockNode,
+  DockPlacement,
   DockSide,
   DockState,
   FloatingDockState,
@@ -20,11 +25,13 @@ import type {
 } from '@df/core'
 import type { Context } from 'cordis'
 import type { PersistedWorkbench } from './store'
-import { debounce, errorMessage } from '@df/core'
+import { clamp, errorMessage } from '@df/core'
 import { Service } from 'cordis'
 import { markRaw, ref, watch } from 'vue'
+import { allNodes, cloneDocking, containsNode, dockPanel, ensurePanel, findGroup, floatPanel, groupForView, movePanel, sanitizeGeometry, sideForGroup } from './docking'
 import { BUILTIN_WORKSPACES, defaultFloatingDock, useWorkbenchStore } from './store'
 
+export * from './docking'
 export * from './store'
 
 declare module 'cordis' {
@@ -49,20 +56,40 @@ export class WorkbenchService extends Service {
   private readonly workspaceCommands = new Map<string, IDisposable>()
   private readonly stopWatch: () => void
   private readonly persist: () => void
+  private panelShortcut = 0
 
   constructor(ctx: Context) {
     super(ctx, 'workbench')
     this.store = useWorkbenchStore(ctx.pinia)
     const persisted = ctx.storage.get<Partial<PersistedWorkbench> | null>('workbench', null)
     this.store.hydrate(persisted)
-    this.persist = debounce(() => {
+    let persistTimer: ReturnType<typeof setTimeout> | undefined
+    const save = (): void => {
       try {
         ctx.storage.set('workbench', this.store.snapshot())
       }
       catch (error) {
         ctx.logger.warn(`[workbench] 持久化失败：${errorMessage(error)}`)
       }
-    }, 150)
+    }
+    this.persist = () => {
+      clearTimeout(persistTimer)
+      persistTimer = setTimeout(save, 150)
+    }
+    if (typeof window !== 'undefined') {
+      ctx.effect(() => {
+        const flush = (): void => {
+          clearTimeout(persistTimer)
+          save()
+        }
+        window.addEventListener('beforeunload', flush)
+        window.addEventListener('pagehide', flush)
+        return () => {
+          window.removeEventListener('beforeunload', flush)
+          window.removeEventListener('pagehide', flush)
+        }
+      }, 'workbench:flush-on-exit')
+    }
     this.stopWatch = watch(
       () => [this.store.layout, this.store.workspaces, this.store.activeWorkspaceId],
       () => this.persist(),
@@ -70,7 +97,8 @@ export class WorkbenchService extends Service {
     )
     ctx.effect(() => () => {
       this.stopWatch()
-      this.persist()
+      clearTimeout(persistTimer)
+      save()
     }, 'workbench:persistence')
     this.registerLayoutCommands()
     for (const workspace of this.store.workspaces) {
@@ -81,6 +109,162 @@ export class WorkbenchService extends Service {
   /** 当前布局。 */
   get layout() {
     return this.store.layout
+  }
+
+  get docking(): DockingLayout {
+    return this.store.layout.docking!
+  }
+
+  panelGroup(id: string): DockGroupNode | undefined {
+    return findGroup(this.docking, id)
+  }
+
+  panelViews(group: DockGroupNode): readonly ViewDefinition[] {
+    return group.views.flatMap((id) => {
+      const view = this.viewMap.value.get(id)
+      return view && !this.docking.hidden.includes(id)
+        ? [view]
+        : []
+    })
+  }
+
+  visibleDockNode(node: DockNode | null): DockNode | null {
+    if (!node)
+      return null
+    if (node.type === 'group') {
+      return this.panelViews(node).length
+        ? node
+        : null
+    }
+    const first = this.visibleDockNode(node.children[0])
+    const second = this.visibleDockNode(node.children[1])
+    if (!first)
+      return second
+    if (!second)
+      return first
+    return {
+      ...node,
+      children: [first, second],
+    }
+  }
+
+  get hiddenPanels(): readonly ViewDefinition[] {
+    return this.docking.hidden.flatMap(id => this.viewMap.value.get(id)
+      ? [
+          this.viewMap.value.get(id)!,
+        ]
+      : [])
+  }
+
+  panelSide(viewId: string): DockEdge {
+    const group = groupForView(this.docking, viewId)
+    return group
+      ? sideForGroup(this.docking, group.id)
+      : 'left'
+  }
+
+  hidePanel(viewId: string): void {
+    if (groupForView(this.docking, viewId) && !this.docking.hidden.includes(viewId))
+      this.docking.hidden.push(viewId)
+  }
+
+  showPanel(viewId: string): void {
+    this.docking.hidden = this.docking.hidden.filter(id => id !== viewId)
+    const group = groupForView(this.docking, viewId)
+    if (group)
+      group.activeView = viewId
+    const view = this.viewMap.value.get(viewId)
+    if (view && view.location !== 'main')
+      this.store.layout[view.location].visible = true
+  }
+
+  activatePanel(groupId: string, viewId: string): void {
+    if (this.panelGroup(groupId)?.views.includes(viewId))
+      this.showPanel(viewId)
+  }
+
+  cyclePanel(groupId: string, direction: number): void {
+    const group = this.panelGroup(groupId)
+    if (!group)
+      return
+    const views = this.panelViews(group)
+    if (!views.length)
+      return
+    const index = views.findIndex(view => view.id === group.activeView)
+    this.activatePanel(groupId, views[(Math.max(0, index) + direction + views.length) % views.length].id)
+  }
+
+  floatPanel(groupId: string, geometry: FloatingDockState, viewId?: string): string | undefined {
+    return floatPanel(this.docking, groupId, geometry, viewId)
+  }
+
+  dockPanel(groupId: string, side: DockEdge): void {
+    dockPanel(this.docking, groupId, side)
+  }
+
+  /** 将整个停靠区（含分割与标签关系）分离为一个浮动容器。 */
+  floatRegion(side: DockEdge): void {
+    const node = this.docking.roots[side]
+    if (!node || !this.visibleDockNode(node))
+      return
+    const geometry = defaultFloatingDock(side === 'right'
+      ? 'right'
+      : 'left', side === 'bottom'
+      ? 400
+      : this.layout[side].size)
+    this.docking.roots[side] = null
+    this.docking.floating.push({
+      id: node.id,
+      node,
+      geometry,
+      lastSide: side,
+    })
+    if (side !== 'bottom')
+      this.store.floatDock(side, geometry)
+  }
+
+  movePanel(groupId: string, targetId: string, placement: DockPlacement, viewId?: string): boolean {
+    const side = sideForGroup(this.docking, targetId)
+    const docked = this.docking.roots[side] && containsNode(this.docking.roots[side]!, targetId)
+    const moved = movePanel(this.docking, groupId, targetId, placement, viewId)
+    if (moved && docked && side !== 'bottom' && (placement === 'left' || placement === 'right')) {
+      this.store.updateDock(side, {
+        size: Math.max(this.layout[side].size, 480),
+      })
+    }
+    return moved
+  }
+
+  setPanelRatio(id: string, ratio: number): void {
+    const node = allNodes(this.docking).find(node => node.id === id)
+    if (node?.type === 'split' && Number.isFinite(ratio))
+      node.ratio = clamp(ratio, 0.15, 0.85)
+  }
+
+  setFloatingGeometry(id: string, geometry: FloatingDockState): void {
+    const panel = this.docking.floating.find(panel => panel.id === id)
+    if (panel)
+      panel.geometry = sanitizeGeometry(geometry)
+  }
+
+  restorePanelLayout(layout: DockingLayout): void {
+    this.store.layout.docking = cloneDocking(layout)
+  }
+
+  private reconcilePanels(): void {
+    for (const view of this.views) {
+      if (view.location !== 'main') {
+        const legacy = this.layout[view.location]
+        ensurePanel(this.docking, view.id, view.location, legacy.visible, legacy.activeView)
+      }
+    }
+  }
+
+  private legacyGroup(location: DockEdge): string | undefined {
+    const active = this.layout[location].activeView
+    return (active
+      ? groupForView(this.docking, active)
+      : undefined)?.id ?? this.panelGroup(`legacy-${location}`)?.id
   }
 
   /** 工作区列表。 */
@@ -123,8 +307,9 @@ export class WorkbenchService extends Service {
   /** 指定侧边当前停靠的侧栏。 */
   dockedSidebar(side: DockSide): SidebarId | undefined {
     for (const location of ['left', 'right'] as const) {
-      const dock = this.store.layout[location]
-      if (dock.visible && !dock.floating && (dock.side ?? location) === side) {
+      const id = this.legacyGroup(location)
+      const root = this.docking.roots[side]
+      if (id && root && containsNode(root, id) && this.layout[location].visible) {
         return location
       }
     }
@@ -133,28 +318,43 @@ export class WorkbenchService extends Service {
 
   /** 侧栏当前是否浮动。 */
   isFloating(location: SidebarId): boolean {
-    return Boolean(this.store.layout[location].floating)
+    const id = this.legacyGroup(location)
+    return this.docking.floating.some(panel => id && containsNode(panel.node, id))
   }
 
   /** 将侧栏切换为浮动；未提供几何时使用默认位置。 */
   floatDock(location: SidebarId, geometry?: FloatingDockState): void {
     const dock = this.store.layout[location]
     this.store.floatDock(location, geometry ?? defaultFloatingDock(dock.side ?? location, dock.size))
+    const id = this.legacyGroup(location)
+    if (id)
+      this.floatPanel(id, this.layout[location].floating!)
   }
 
   /** 将侧栏停靠到指定一侧；目标侧被占用时将原侧栏转为浮动。 */
   dockSidebar(location: SidebarId, side: DockSide): void {
     this.store.dockSidebar(location, side)
+    const id = this.legacyGroup(location)
+    if (id)
+      this.dockPanel(id, side)
   }
 
   /** 更新浮动侧栏位置。 */
   moveFloatingDock(location: SidebarId, x: number, y: number): void {
     this.store.moveFloatingDock(location, x, y)
+    const id = this.legacyGroup(location)
+    const panel = this.docking.floating.find(panel => id && containsNode(panel.node, id))
+    if (panel)
+      this.setFloatingGeometry(panel.id, { ...panel.geometry, x, y })
   }
 
   /** 更新浮动侧栏尺寸。 */
   resizeFloatingDock(location: SidebarId, width: number, height: number): void {
     this.store.resizeFloatingDock(location, width, height)
+    const id = this.legacyGroup(location)
+    const panel = this.docking.floating.find(panel => id && containsNode(panel.node, id))
+    if (panel)
+      this.setFloatingGeometry(panel.id, { ...panel.geometry, width, height })
   }
 
   /** 注册视图。 */
@@ -190,8 +390,33 @@ export class WorkbenchService extends Service {
       run: () => this.openView(view.id),
     })
     this.ctx.emit('view/registered', view)
+    if (view.location !== 'main') {
+      this.reconcilePanels()
+    }
+    const shortcut = view.location !== 'main'
+      ? ++this.panelShortcut
+      : 0
+    const toggle = view.location !== 'main'
+      ? this.ctx.commands.register({
+          id: `view.toggle.${view.id}`,
+          title: `显示 / 隐藏面板：${view.title}`,
+          category: '面板',
+          icon: view.icon,
+          keybinding: view.keybinding ?? (shortcut <= 9
+            ? `Mod+Alt+${shortcut}`
+            : undefined),
+          checked: () => !this.docking.hidden.includes(view.id),
+          menu: {
+            path: ['视图', '面板'],
+          },
+          run: () => this.docking.hidden.includes(view.id)
+            ? this.showPanel(view.id)
+            : this.hidePanel(view.id),
+        })
+      : undefined
     return {
       dispose: () => {
+        toggle?.dispose()
         command.dispose()
         if (this.viewMap.value.get(view.id)?.id === view.id) {
           this.viewMap.value.delete(view.id)
@@ -212,12 +437,40 @@ export class WorkbenchService extends Service {
     }
     else {
       this.store.setActiveView(view.location, id)
+      this.showPanel(id)
     }
   }
 
   /** 切换停靠区。 */
   toggleDock(location: Exclude<ViewLocation, 'main'>): void {
-    this.store.toggleDock(location)
+    const visible = !this.isRegionVisible(location)
+    this.store.updateDock(location, { visible })
+    for (const id of this.regionPanels(location)) {
+      if (visible)
+        this.showPanel(id)
+      else this.hidePanel(id)
+    }
+  }
+
+  isRegionVisible(location: DockEdge): boolean {
+    const panels = this.regionPanels(location).filter(id => this.viewMap.value.has(id))
+    return panels.length
+      ? panels.some(id => !this.docking.hidden.includes(id))
+      : this.layout[location].visible
+  }
+
+  private regionPanels(location: DockEdge): string[] {
+    const ids: string[] = []
+    const collect = (node: DockNode | null): void => {
+      if (!node)
+        return
+      if (node.type === 'group')
+        ids.push(...node.views)
+      else node.children.forEach(collect)
+    }
+    collect(this.docking.roots[location])
+    this.docking.floating.filter(panel => panel.lastSide === location).forEach(panel => collect(panel.node))
+    return ids
   }
 
   /** 切换 Ribbon 折叠。 */
@@ -234,6 +487,7 @@ export class WorkbenchService extends Service {
   applyWorkspace(id: string): void {
     const workspace = this.store.applyWorkspace(id)
     if (workspace) {
+      this.reconcilePanels()
       this.ctx.emit('workbench/workspace-applied', workspace)
     }
   }
@@ -258,6 +512,7 @@ export class WorkbenchService extends Service {
   /** 重置当前工作区布局。 */
   resetLayout(): void {
     this.store.applyWorkspace(this.store.activeWorkspaceId)
+    this.reconcilePanels()
   }
 
   /** 布局变化通知，供 React/Vue 之外的消费者使用。 */
@@ -268,12 +523,29 @@ export class WorkbenchService extends Service {
   private registerLayoutCommands(): void {
     const commands: CommandDefinition[] = [
       {
+        id: 'view.restoreHiddenPanel',
+        title: '恢复最近隐藏的面板',
+        category: '面板',
+        icon: 'eye',
+        keybinding: 'Mod+Alt+P',
+        enabled: () => this.hiddenPanels.length > 0,
+        menu: {
+          path: ['视图', '面板'],
+          order: -1,
+        },
+        run: () => {
+          const panel = this.hiddenPanels.at(-1)
+          if (panel)
+            this.showPanel(panel.id)
+        },
+      },
+      {
         id: 'view.toggleLeft',
         title: '切换左侧栏',
         category: '视图',
         icon: 'layout-sidebar-left',
         keybinding: 'Mod+B',
-        checked: () => this.store.layout.left.visible,
+        checked: () => this.isRegionVisible('left'),
         ribbon: {
           tab: 'view',
           tabTitle: '视图',
@@ -294,7 +566,7 @@ export class WorkbenchService extends Service {
         category: '视图',
         icon: 'layout-sidebar-right',
         keybinding: 'Mod+Alt+B',
-        checked: () => this.store.layout.right.visible,
+        checked: () => this.isRegionVisible('right'),
         ribbon: {
           tab: 'view',
           tabTitle: '视图',
@@ -315,7 +587,7 @@ export class WorkbenchService extends Service {
         category: '视图',
         icon: 'layout-panel',
         keybinding: 'Mod+J',
-        checked: () => this.store.layout.bottom.visible,
+        checked: () => this.isRegionVisible('bottom'),
         ribbon: {
           tab: 'view',
           tabTitle: '视图',
@@ -336,12 +608,12 @@ export class WorkbenchService extends Service {
         description: '将左侧栏从停靠位置分离为浮动面板。',
         category: '视图',
         icon: 'multiple-windows',
-        enabled: () => this.store.layout.left.visible && !this.store.layout.left.floating,
+        enabled: () => Boolean(this.visibleDockNode(this.docking.roots.left)),
         menu: {
           path: ['视图'],
           order: 4,
         },
-        run: () => this.floatDock('left'),
+        run: () => this.floatRegion('left'),
       },
       {
         id: 'view.floatRight',
@@ -349,12 +621,12 @@ export class WorkbenchService extends Service {
         description: '将右侧栏从停靠位置分离为浮动面板。',
         category: '视图',
         icon: 'multiple-windows',
-        enabled: () => this.store.layout.right.visible && !this.store.layout.right.floating,
+        enabled: () => Boolean(this.visibleDockNode(this.docking.roots.right)),
         menu: {
           path: ['视图'],
           order: 5,
         },
-        run: () => this.floatDock('right'),
+        run: () => this.floatRegion('right'),
       },
       {
         id: 'view.toggleRibbon',

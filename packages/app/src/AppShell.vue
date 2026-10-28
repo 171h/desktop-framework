@@ -7,15 +7,18 @@ import RibbonBar from '@df/ribbon/RibbonBar.vue'
 import StatusBar from '@df/statusbar/StatusBar.vue'
 import { DfPromptDialog, DfSlot } from '@df/ui'
 import { useCordis } from '@df/vue'
-import { computed, watch } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import appIcon from './assets/icon.png'
 import CommandPalette from './components/CommandPalette.vue'
 import DockDropOverlay from './components/DockDropOverlay.vue'
 import FloatingDocks from './components/FloatingDocks.vue'
+import HiddenPanels from './components/HiddenPanels.vue'
 import WorkspaceBody from './components/WorkspaceBody.vue'
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue'
+import { cancelDockDrag } from './dock-drag'
 
 const ctx = useCordis()
+onBeforeUnmount(cancelDockDrag)
 const isMac = computed(() => ctx.platform.platform === 'darwin')
 const layout = computed(() => ctx.workbench.layout)
 const ribbonInTitlebar = computed(() => ctx.ribbon.tabPlacement === 'titlebar')
@@ -89,6 +92,7 @@ watch(
       </WorkspaceBody>
       <FloatingDocks />
       <DockDropOverlay />
+      <HiddenPanels />
     </div>
 
     <StatusBar v-if="layout.statusbarVisible" />

@@ -1,44 +1,21 @@
 <script setup lang="ts">
-import type { SidebarId } from '@df/core'
+import type { DockNode } from '@df/core'
 import { DfSplitLayout } from '@df/ui'
 import { useCordis } from '@df/vue'
-import { computed } from 'vue'
 import BottomRegion from './BottomRegion.vue'
-import DockPanel from './DockPanel.vue'
+import DockNodeView from './DockNodeView.vue'
 
-const props = defineProps<{
-  group?: SidebarId
-}>()
-
+defineProps<{ node: DockNode | null }>()
 const ctx = useCordis()
-const dock = computed(() => props.group
-  ? ctx.workbench.layout[props.group]
-  : undefined)
-
-function setSize(size: number): void {
-  if (props.group) {
-    ctx.workbench.setDockSize(props.group, size)
-  }
-}
 </script>
 
 <template>
-  <DfSplitLayout
-    v-if="props.group && dock"
-    split="vertical"
-    :size="dock.size"
-    size-side="end"
-    min-start="320px"
-    min-end="220px"
-    @update:size="setSize"
-  >
+  <DfSplitLayout v-if="node" :size="ctx.workbench.layout.right.size" size-side="end" min-start="320px" min-end="180px" @update:size="ctx.workbench.setDockSize('right', $event)">
     <template #start>
-      <BottomRegion>
-        <slot />
-      </BottomRegion>
+      <BottomRegion><slot /></BottomRegion>
     </template>
     <template #end>
-      <DockPanel :location="props.group" />
+      <DockNodeView :node="node" />
     </template>
   </DfSplitLayout>
   <BottomRegion v-else>

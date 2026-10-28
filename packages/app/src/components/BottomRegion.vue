@@ -2,34 +2,20 @@
 import { DfSplitLayout } from '@df/ui'
 import { useCordis } from '@df/vue'
 import { computed } from 'vue'
-import DockPanel from './DockPanel.vue'
+import DockNodeView from './DockNodeView.vue'
 import MainRegion from './MainRegion.vue'
 
 const ctx = useCordis()
-const layout = computed(() => ctx.workbench.layout)
-
-function setSize(size: number): void {
-  ctx.workbench.setDockSize('bottom', size)
-}
+const node = computed(() => ctx.workbench.visibleDockNode(ctx.workbench.docking.roots.bottom))
 </script>
 
 <template>
-  <DfSplitLayout
-    v-if="layout.bottom.visible"
-    split="horizontal"
-    :size="layout.bottom.size"
-    size-side="end"
-    min-start="180px"
-    min-end="120px"
-    @update:size="setSize"
-  >
+  <DfSplitLayout v-if="node" split="horizontal" :size="ctx.workbench.layout.bottom.size" size-side="end" min-start="180px" min-end="100px" @update:size="ctx.workbench.setDockSize('bottom', $event)">
     <template #start>
-      <MainRegion>
-        <slot />
-      </MainRegion>
+      <MainRegion><slot /></MainRegion>
     </template>
     <template #end>
-      <DockPanel location="bottom" />
+      <DockNodeView :node="node" />
     </template>
   </DfSplitLayout>
   <MainRegion v-else>

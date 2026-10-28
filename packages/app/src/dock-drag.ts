@@ -1,213 +1,242 @@
-/**
- * 停靠侧栏拖拽控制器。
- *
- * 拖动停靠侧栏会将其转为浮动面板；拖动浮动面板可自由移动。靠近工作台
- * 左右边缘时显示停靠提示，释放后停靠到对应一侧。控制器使用 window 级
- * pointer 事件，因此面板在拖拽过程中从停靠 DOM 切换到浮动 DOM 也不会
- * 中断拖拽。
- */
-import type { DockSide, FloatingDockState, SidebarId } from '@df/core'
+import type { DockEdge, DockingLayout, DockPlacement, FloatingDockState } from '@df/core'
 import type { Context } from 'cordis'
 import { clamp } from '@df/core'
+import { cloneDocking } from '@df/workbench'
 import { reactive } from 'vue'
 
-export interface DockDragState {
-  active: boolean
-  location?: SidebarId
-  hint?: DockSide
+export interface DockDropTarget {
+  edge?: DockEdge
+  groupId?: string
+  placement: DockPlacement
+  preview: FloatingDockState
+}
+export const dockDragState = reactive<{ active: boolean, target?: DockDropTarget }>({ active: false })
+
+/** 边缘对齐只考虑投影重叠的浮窗；Ctrl 拖动可临时关闭。 */
+export function snapFloatingGeometry(value: FloatingDockState, width: number, height: number, neighbors: FloatingDockState[], threshold = 12): FloatingDockState {
+  const xs = [0, width - value.width]
+  const ys = [0, height - value.height]
+  for (const box of neighbors) {
+    if (value.y + value.height >= box.y && value.y <= box.y + box.height)
+      xs.push(box.x, box.x + box.width, box.x - value.width, box.x + box.width - value.width)
+    if (value.x + value.width >= box.x && value.x <= box.x + box.width)
+      ys.push(box.y, box.y + box.height, box.y - value.height, box.y + box.height - value.height)
+  }
+  const snap = (position: number, candidates: number[]): number => candidates.filter(candidate => Math.abs(candidate - position) <= threshold).sort((a, b) => Math.abs(a - position) - Math.abs(b - position))[0] ?? position
+  return {
+    ...value,
+    x: clamp(snap(value.x, xs), 0, Math.max(0, width - value.width)),
+    y: clamp(snap(value.y, ys), 0, Math.max(0, height - value.height)),
+  }
 }
 
-export const dockDragState = reactive<DockDragState>({
-  active: false,
-})
+/** 鼠标在面板中心时合并标签，在四边时分割。 */
+export function panelDropPlacement(rect: { left: number, top: number, width: number, height: number }, x: number, y: number): DockPlacement {
+  const dx = (x - rect.left) / rect.width
+  const dy = (y - rect.top) / rect.height
+  const distances = [
+    { placement: 'left', distance: dx },
+    { placement: 'right', distance: 1 - dx },
+    { placement: 'top', distance: dy },
+    { placement: 'bottom', distance: 1 - dy },
+  ] as const
+  const nearest = [...distances].sort((a, b) => a.distance - b.distance)[0]
+  return nearest.distance < 0.25
+    ? nearest.placement
+    : 'center'
+}
 
-interface DragSession {
+interface Session {
   ctx: Context
-  location: SidebarId
-  panel: HTMLElement
+  groupId: string
+  viewId?: string
+  floatingId?: string
+  element: HTMLElement
   workbench: HTMLElement
+  pointerId: number
   startX: number
   startY: number
   offsetX: number
   offsetY: number
   started: boolean
-  wasFloating: boolean
-  originalSide: DockSide
-  originalFloating?: FloatingDockState
+  original: DockingLayout
 }
-
-let session: DragSession | undefined
-let onMove: ((event: PointerEvent) => void) | undefined
-let onUp: ((event: PointerEvent) => void) | undefined
-let onCancel: (() => void) | undefined
-let onBlur: (() => void) | undefined
-let onKeyDown: ((event: KeyboardEvent) => void) | undefined
-
-function isInteractive(target: EventTarget | null): boolean {
-  return target instanceof Element
-    && Boolean(target.closest('button, input, textarea, select, a, [contenteditable="true"], vscode-toolbar-button, vscode-button, vscode-icon[action-icon]'))
-}
+let session: Session | undefined
 
 function cleanup(): void {
-  if (onMove) {
-    window.removeEventListener('pointermove', onMove)
-  }
-  if (onUp) {
-    window.removeEventListener('pointerup', onUp)
-  }
-  if (onCancel) {
-    window.removeEventListener('pointercancel', onCancel)
-  }
-  if (onBlur) {
-    window.removeEventListener('blur', onBlur)
-  }
-  if (onKeyDown) {
-    window.removeEventListener('keydown', onKeyDown)
-  }
+  window.removeEventListener('pointermove', move)
+  window.removeEventListener('pointerup', finish)
+  window.removeEventListener('pointercancel', cancelDockDrag)
+  window.removeEventListener('blur', cancelDockDrag)
+  window.removeEventListener('keydown', keydown)
   document.body.classList.remove('df-dock-dragging')
   dockDragState.active = false
-  dockDragState.location = undefined
-  dockDragState.hint = undefined
+  dockDragState.target = undefined
   session = undefined
 }
 
-function hintFor(workbench: DOMRect, event: PointerEvent): DockSide | undefined {
-  const threshold = Math.max(48, workbench.width * 0.08)
-  if (event.clientX - workbench.left <= threshold) {
-    return 'left'
-  }
-  if (workbench.right - event.clientX <= threshold) {
-    return 'right'
-  }
-  return undefined
+export function cancelDockDrag(): void {
+  if (session?.started)
+    session.ctx.workbench.restorePanelLayout(session.original)
+  cleanup()
 }
 
-/** 开始拖动侧栏。 */
-export function startDockDrag(
-  ctx: Context,
-  location: SidebarId,
-  event: PointerEvent,
-  panel: HTMLElement | undefined,
-): void {
-  if (event.button !== 0 || !panel || isInteractive(event.target)) {
-    return
+function keydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    cancelDockDrag()
   }
-  const dock = ctx.workbench.layout[location]
-  if (!dock.visible) {
+}
+
+function dropTarget(current: Session, event: PointerEvent): DockDropTarget | undefined {
+  if (event.ctrlKey)
     return
+  const bounds = current.workbench.getBoundingClientRect()
+  const x = event.clientX - bounds.left
+  const y = event.clientY - bounds.top
+  if (x < 0 || x > bounds.width || y < 0 || y > bounds.height)
+    return
+  const edge = x < 28
+    ? 'left'
+    : x > bounds.width - 28
+      ? 'right'
+      : y > bounds.height - 28
+        ? 'bottom'
+        : undefined
+  if (edge) {
+    return {
+      edge,
+      placement: 'center',
+      preview: edge === 'bottom'
+        ? {
+            x: 0,
+            y: bounds.height * 0.7,
+            width: bounds.width,
+            height: bounds.height * 0.3,
+          }
+        : {
+            x: edge === 'left'
+              ? 0
+              : bounds.width - Math.min(320, bounds.width * 0.3),
+            y: 0,
+            width: Math.min(320, bounds.width * 0.3),
+            height: bounds.height,
+          },
+    }
   }
-  const workbench = panel.closest<HTMLElement>('.df-workbench')
-  if (!workbench) {
-    return
+  for (const element of document.elementsFromPoint(event.clientX, event.clientY)) {
+    const group = element.closest<HTMLElement>('.df-panel-group')
+    if (!group || !current.workbench.contains(group) || group.dataset.groupId === current.groupId)
+      continue
+    if (group.closest<HTMLElement>('[data-floating-id]')?.dataset.floatingId === current.floatingId)
+      continue
+    const rect = group.getBoundingClientRect()
+    const placement = panelDropPlacement(rect, event.clientX, event.clientY)
+    const preview = {
+      x: rect.left - bounds.left,
+      y: rect.top - bounds.top,
+      width: rect.width,
+      height: rect.height,
+    }
+    if (placement === 'left' || placement === 'right') {
+      preview.width /= 2
+      if (placement === 'right')
+        preview.x += preview.width
+    }
+    if (placement === 'top' || placement === 'bottom') {
+      preview.height /= 2
+      if (placement === 'bottom')
+        preview.y += preview.height
+    }
+    return { groupId: group.dataset.groupId, placement, preview }
   }
-  const rect = panel.getBoundingClientRect()
-  if (rect.width <= 0 || rect.height <= 0) {
+}
+
+function move(event: PointerEvent): void {
+  const current = session
+  if (!current || event.pointerId !== current.pointerId)
     return
+  const bounds = current.workbench.getBoundingClientRect()
+  if (!current.started) {
+    if (Math.hypot(event.clientX - current.startX, event.clientY - current.startY) < 5)
+      return
+    const rect = current.element.getBoundingClientRect()
+    current.started = true
+    const floating = current.ctx.workbench.docking.floating.find(panel => panel.node.type === 'group' && panel.node.id === current.groupId && (!current.viewId || panel.node.views.length === 1))
+    if (floating) {
+      current.floatingId = floating.id
+    }
+    else {
+      const id = current.ctx.workbench.floatPanel(current.groupId, {
+        x: Math.max(0, rect.left - bounds.left),
+        y: Math.max(0, rect.top - bounds.top),
+        width: Math.max(240, Math.min(rect.width, bounds.width - 16)),
+        height: Math.max(180, Math.min(rect.height, bounds.height - 16, 560)),
+      }, current.viewId)
+      if (!id) {
+        cleanup()
+        return
+      }
+      current.groupId = id
+      current.floatingId = id
+    }
+    document.body.classList.add('df-dock-dragging')
+    dockDragState.active = true
   }
   event.preventDefault()
-  event.stopPropagation()
+  const panel = current.ctx.workbench.docking.floating.find(panel => panel.id === current.floatingId)
+  if (!panel)
+    return
+  const geometry = { ...panel.geometry, x: event.clientX - bounds.left - current.offsetX, y: event.clientY - bounds.top - current.offsetY }
+  const neighbors = current.ctx.workbench.docking.floating.filter(other => other.id !== panel.id && current.ctx.workbench.visibleDockNode(other.node)).map(other => other.geometry)
+  current.ctx.workbench.setFloatingGeometry(panel.id, snapFloatingGeometry(geometry, bounds.width, bounds.height, event.ctrlKey
+    ? []
+    : neighbors, event.ctrlKey ? 0 : 12))
+  dockDragState.target = dropTarget(current, event)
+}
+
+function finish(event: PointerEvent): void {
+  const current = session
+  if (!current || event.pointerId !== current.pointerId)
+    return
+  if (current.started) {
+    const target = dropTarget(current, event)
+    if (target?.edge)
+      current.ctx.workbench.dockPanel(current.groupId, target.edge)
+    else if (target?.groupId)
+      current.ctx.workbench.movePanel(current.groupId, target.groupId, target.placement)
+  }
   cleanup()
+}
+
+export function startDockDrag(ctx: Context, groupId: string, event: PointerEvent, panel?: HTMLElement, viewId?: string): void {
+  const interactive = event.composedPath().some(target => target instanceof Element && (target.matches('input,textarea,select,a,vscode-toolbar-button,vscode-button') || (!viewId && target.matches('button'))))
+  if (event.button !== 0 || !panel || interactive)
+    return
+  const workbench = panel.closest<HTMLElement>('.df-workbench')
+  if (!workbench)
+    return
+  cancelDockDrag()
+  const rect = panel.getBoundingClientRect()
+  event.preventDefault()
+  event.stopPropagation()
   session = {
     ctx,
-    location,
-    panel,
+    groupId,
+    viewId,
+    element: panel,
     workbench,
+    pointerId: event.pointerId,
     startX: event.clientX,
     startY: event.clientY,
     offsetX: event.clientX - rect.left,
     offsetY: event.clientY - rect.top,
     started: false,
-    wasFloating: Boolean(dock.floating),
-    originalSide: dock.side ?? location,
-    originalFloating: dock.floating
-      ? { ...dock.floating }
-      : undefined,
+    original: cloneDocking(ctx.workbench.docking),
   }
-
-  onMove = (moveEvent) => {
-    const current = session
-    if (!current) {
-      return
-    }
-    if (!current.started) {
-      const distance = Math.hypot(moveEvent.clientX - current.startX, moveEvent.clientY - current.startY)
-      if (distance < 4) {
-        return
-      }
-      current.started = true
-      dockDragState.active = true
-      dockDragState.location = current.location
-      document.body.classList.add('df-dock-dragging')
-      if (!current.ctx.workbench.isFloating(current.location)) {
-        const workRect = current.workbench.getBoundingClientRect()
-        const panelRect = current.panel.getBoundingClientRect()
-        const width = clamp(panelRect.width, 240, Math.max(240, workRect.width - 24))
-        const height = clamp(panelRect.height, 320, Math.max(320, Math.min(workRect.height - 32, 560)))
-        current.ctx.workbench.floatDock(current.location, {
-          x: clamp(panelRect.left - workRect.left, 0, Math.max(0, workRect.width - 80)),
-          y: clamp(panelRect.top - workRect.top, 0, Math.max(0, workRect.height - 38)),
-          width,
-          height,
-        })
-      }
-    }
-    moveEvent.preventDefault()
-    const workRect = current.workbench.getBoundingClientRect()
-    const floating = current.ctx.workbench.layout[current.location].floating
-    const x = moveEvent.clientX - workRect.left - current.offsetX
-    const y = moveEvent.clientY - workRect.top - current.offsetY
-    current.ctx.workbench.moveFloatingDock(
-      current.location,
-      clamp(x, 0, Math.max(0, workRect.width - (floating?.width ?? 0))),
-      clamp(y, 0, Math.max(0, workRect.height - (floating?.height ?? 0))),
-    )
-    dockDragState.hint = hintFor(workRect, moveEvent)
-  }
-
-  onUp = () => {
-    const current = session
-    if (current?.started && dockDragState.hint) {
-      current.ctx.workbench.dockSidebar(current.location, dockDragState.hint)
-    }
-    cleanup()
-  }
-
-  onCancel = () => {
-    cleanup()
-  }
-
-  onBlur = () => {
-    cleanup()
-  }
-
-  onKeyDown = (keyEvent) => {
-    if (keyEvent.key !== 'Escape') {
-      return
-    }
-    const current = session
-    if (current?.started) {
-      if (current.wasFloating && current.originalFloating) {
-        current.ctx.workbench.resizeFloatingDock(
-          current.location,
-          current.originalFloating.width,
-          current.originalFloating.height,
-        )
-        current.ctx.workbench.moveFloatingDock(
-          current.location,
-          current.originalFloating.x,
-          current.originalFloating.y,
-        )
-      }
-      else {
-        current.ctx.workbench.dockSidebar(current.location, current.originalSide)
-      }
-    }
-    cleanup()
-  }
-
-  window.addEventListener('pointermove', onMove, { passive: false })
-  window.addEventListener('pointerup', onUp)
-  window.addEventListener('pointercancel', onCancel)
-  window.addEventListener('blur', onBlur)
-  window.addEventListener('keydown', onKeyDown)
+  window.addEventListener('pointermove', move, { passive: false })
+  window.addEventListener('pointerup', finish)
+  window.addEventListener('pointercancel', cancelDockDrag)
+  window.addEventListener('blur', cancelDockDrag)
+  window.addEventListener('keydown', keydown)
 }

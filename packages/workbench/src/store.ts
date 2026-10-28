@@ -7,6 +7,7 @@
 import type { DockSide, DockState, FloatingDockState, SidebarId, ViewLocation, WorkbenchLayout, WorkspacePreset } from '@df/core'
 import { clamp } from '@df/core'
 import { defineStore } from 'pinia'
+import { cloneDocking, restoreDocking } from './docking'
 
 /** 持久化结构。 */
 export interface PersistedWorkbench {
@@ -132,6 +133,9 @@ function cloneFloating(floating?: FloatingDockState | null): FloatingDockState |
 
 function cloneLayout(layout: WorkbenchLayout): WorkbenchLayout {
   return {
+    docking: layout.docking
+      ? cloneDocking(layout.docking)
+      : restoreDocking(undefined, layout),
     left: {
       ...layout.left,
       side: layout.left.side ?? 'left',
@@ -180,10 +184,12 @@ export const useWorkbenchStore = defineStore('desktop-framework:workbench', {
         return
       }
       this.layout = sanitizeLayout(data.layout)
-      const custom = (data.workspaces ?? []).filter(workspace => !workspace.builtin && workspace.layout)
+      const custom = (Array.isArray(data.workspaces)
+        ? data.workspaces
+        : []).filter(workspace => workspace && !workspace.builtin && workspace.layout && typeof workspace.layout === 'object')
       this.workspaces = [
         ...cloneWorkspaces(BUILTIN_WORKSPACES),
-        ...cloneWorkspaces(custom).map(workspace => ({
+        ...custom.map(workspace => ({
           ...workspace,
           layout: sanitizeLayout(workspace.layout),
           id: workspace.id || `custom-${Date.now()}`,
@@ -239,19 +245,9 @@ export const useWorkbenchStore = defineStore('desktop-framework:workbench', {
       }
     },
 
-    /** 将侧栏停靠到左侧或右侧；目标侧已有侧栏时将其转为浮动。 */
+    /** 将侧栏停靠到左侧或右侧，允许同侧组合。 */
     dockSidebar(location: SidebarId, side: DockSide): void {
       const dock = this.layout[location]
-      const otherLocation: SidebarId = location === 'left'
-        ? 'right'
-        : 'left'
-      const other = this.layout[otherLocation]
-      if (!other.floating && (other.side ?? otherLocation) === side) {
-        this.layout[otherLocation] = {
-          ...other,
-          floating: defaultFloatingDock(other.side ?? otherLocation, other.size),
-        }
-      }
       const [min, max] = DOCK_LIMITS[location]
       this.layout[location] = {
         ...dock,
@@ -342,13 +338,12 @@ export const useWorkbenchStore = defineStore('desktop-framework:workbench', {
 function sanitizeLayout(layout: WorkbenchLayout): WorkbenchLayout {
   const left = sanitizeDock(layout.left, 'left', DEFAULT_LAYOUT.left)
   const right = sanitizeDock(layout.right, 'right', DEFAULT_LAYOUT.right)
-  if (!left.floating && !right.floating && left.side === right.side) {
-    right.floating = defaultFloatingDock('right', right.size)
-  }
+  const bottom = sanitizeDock(layout.bottom, 'bottom', DEFAULT_LAYOUT.bottom)
   return {
+    docking: restoreDocking(layout.docking, { ...layout, left, right, bottom }),
     left,
     right,
-    bottom: sanitizeDock(layout.bottom, 'bottom', DEFAULT_LAYOUT.bottom),
+    bottom,
     ribbonCollapsed: Boolean(layout.ribbonCollapsed),
     statusbarVisible: layout.statusbarVisible !== false,
   }
