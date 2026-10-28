@@ -18,6 +18,8 @@ export const CHANNELS = {
   openDetachedWindow: 'df:open-detached-window',
   windowContext: 'df:window-context',
   windowMessage: 'df:window-message',
+  panelDragWatch: 'df:panel-drag-watch',
+  panelDragOutside: 'df:panel-drag-outside',
 } as const
 
 export interface RendererOptions {

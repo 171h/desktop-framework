@@ -5,7 +5,7 @@ import { readFile, stat, writeFile } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { errorMessage } from '@df/core'
 import { DisposableStore, toDisposable } from '@df/vscode'
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, screen, shell } from 'electron'
 import { CHANNELS } from '../../shared'
 import { executeDeveloperAction } from '../developer-tools'
 import { isAllowedNavigation } from '../navigation'
@@ -21,7 +21,7 @@ export async function apply(ctx: Context): Promise<void> {
   const disposables = new DisposableStore()
   ctx.effect(() => () => disposables.dispose(), 'electron:ipc')
 
-  const trusted = (event: Electron.IpcMainInvokeEvent): boolean => {
+  const trusted = (event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean => {
     return host.isTrustedWindow(event.sender)
       && event.senderFrame === event.sender.mainFrame
       && isAllowedNavigation(event.senderFrame?.url ?? '', host.options.renderer.devUrl)
@@ -191,6 +191,62 @@ export async function apply(ctx: Context): Promise<void> {
   }
   ipcMain.on(CHANNELS.windowMessage, onWindowMessage)
   disposables.add(toDisposable(() => ipcMain.removeListener(CHANNELS.windowMessage, onWindowMessage)))
+
+  let panelWatch: { sender: Electron.WebContents, timer: NodeJS.Timeout, outsideSince: number } | undefined
+  const stopPanelWatch = (sender?: Electron.WebContents): void => {
+    if (!panelWatch || (sender && panelWatch.sender !== sender)) {
+      return
+    }
+    clearInterval(panelWatch.timer)
+    panelWatch = undefined
+  }
+  const onPanelDragWatch = (event: Electron.IpcMainEvent, action?: unknown): void => {
+    if (!trusted(event)) {
+      return
+    }
+    if (action !== 'start') {
+      stopPanelWatch(event.sender)
+      return
+    }
+    stopPanelWatch()
+    const source = event.sender
+    const timer = setInterval(() => {
+      if (!panelWatch || panelWatch.sender !== source || source.isDestroyed()) {
+        stopPanelWatch(source)
+        return
+      }
+      const window = BrowserWindow.fromWebContents(source)
+      if (!window || window.isDestroyed()) {
+        stopPanelWatch(source)
+        return
+      }
+      const point = screen.getCursorScreenPoint()
+      const bounds = window.getBounds()
+      const outside = point.x < bounds.x
+        || point.y < bounds.y
+        || point.x >= bounds.x + bounds.width
+        || point.y >= bounds.y + bounds.height
+      if (!outside) {
+        panelWatch.outsideSince = 0
+        return
+      }
+      if (!panelWatch.outsideSince) {
+        panelWatch.outsideSince = Date.now()
+        return
+      }
+      if (Date.now() - panelWatch.outsideSince < 80) {
+        return
+      }
+      source.send(CHANNELS.panelDragOutside, { x: point.x, y: point.y })
+      stopPanelWatch(source)
+    }, 50)
+    panelWatch = { sender: source, timer, outsideSince: 0 }
+  }
+  ipcMain.on(CHANNELS.panelDragWatch, onPanelDragWatch)
+  disposables.add(toDisposable(() => {
+    stopPanelWatch()
+    ipcMain.removeListener(CHANNELS.panelDragWatch, onPanelDragWatch)
+  }))
 
   handle(CHANNELS.developerAction, (event, action: unknown) => executeDeveloperAction(
     event.sender,

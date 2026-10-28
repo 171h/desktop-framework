@@ -3,7 +3,7 @@
  *
  * 渲染进程没有 Node、没有 `ipcRenderer`，只能调用这里列出的方法。
  */
-import type { DesktopBridge, DetachedWindowRequest, FileDialogFilter, FrameworkRuntimeInfo, OpenedFile, SaveFileRequest, TitleBarOverlayOptions, WindowContext, WindowControlAction, WindowMessage, WindowState } from '@df/core'
+import type { DesktopBridge, DetachedWindowRequest, FileDialogFilter, FrameworkRuntimeInfo, OpenedFile, SaveFileRequest, ScreenPoint, TitleBarOverlayOptions, WindowContext, WindowControlAction, WindowMessage, WindowState } from '@df/core'
 import { contextBridge, ipcRenderer } from 'electron'
 import { CHANNELS } from '../shared'
 
@@ -81,6 +81,17 @@ export function exposeDesktopBridge(): void {
       const handler = (_event: Electron.IpcRendererEvent, message: WindowMessage): void => listener(message)
       ipcRenderer.on(CHANNELS.windowMessage, handler)
       return () => ipcRenderer.removeListener(CHANNELS.windowMessage, handler)
+    },
+    startPanelDragWatch(): void {
+      ipcRenderer.send(CHANNELS.panelDragWatch, 'start')
+    },
+    stopPanelDragWatch(): void {
+      ipcRenderer.send(CHANNELS.panelDragWatch, 'stop')
+    },
+    onPanelDragOutside(listener: (point: ScreenPoint) => void): () => void {
+      const handler = (_event: Electron.IpcRendererEvent, point: ScreenPoint): void => listener(point)
+      ipcRenderer.on(CHANNELS.panelDragOutside, handler)
+      return () => ipcRenderer.removeListener(CHANNELS.panelDragOutside, handler)
     },
   }
 

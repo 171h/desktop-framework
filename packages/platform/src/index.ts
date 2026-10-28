@@ -15,6 +15,7 @@ import type {
   IDisposable,
   OpenedFile,
   SaveFileRequest,
+  ScreenPoint,
   TitleBarOverlayOptions,
   WindowContext,
   WindowControlAction,
@@ -168,6 +169,29 @@ export class PlatformService extends Service {
   /** 订阅其他框架窗口的消息。 */
   onWindowMessage(listener: (message: WindowMessage) => void): IDisposable {
     const dispose = this.bridge?.onWindowMessage?.(listener)
+    return {
+      dispose: () => dispose?.(),
+    }
+  }
+
+  /** 当前宿主是否支持监听浮动面板拖出主窗口。 */
+  get supportsPanelDragWatch(): boolean {
+    return typeof this.bridge?.startPanelDragWatch === 'function'
+  }
+
+  /** 开始监听浮动面板拖出主窗口。 */
+  startPanelDragWatch(): void {
+    this.bridge?.startPanelDragWatch?.()
+  }
+
+  /** 停止监听浮动面板拖拽。 */
+  stopPanelDragWatch(): void {
+    this.bridge?.stopPanelDragWatch?.()
+  }
+
+  /** 订阅光标离开主窗口事件。 */
+  onPanelDragOutside(listener: (point: ScreenPoint) => void): IDisposable {
+    const dispose = this.bridge?.onPanelDragOutside?.(listener)
     return {
       dispose: () => dispose?.(),
     }

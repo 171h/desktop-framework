@@ -63,9 +63,11 @@ interface Session {
   lastScreenY: number
   started: boolean
   outsideWindow: boolean
+  watchStarted: boolean
   original: DockingLayout
 }
 let session: Session | undefined
+let outsideSubscription: (() => void) | undefined
 
 function isOutsideWindow(event: PointerEvent): boolean {
   return event.screenX < window.screenX
@@ -101,10 +103,31 @@ function cleanup(): void {
   if (session?.element.hasPointerCapture?.(session.pointerId)) {
     session.element.releasePointerCapture(session.pointerId)
   }
+  session?.ctx.platform?.stopPanelDragWatch?.()
+  outsideSubscription?.()
+  outsideSubscription = undefined
   document.body.classList.remove('df-dock-dragging')
   dockDragState.active = false
   dockDragState.target = undefined
   session = undefined
+}
+
+function onPanelDragOutside(point: { x: number, y: number }): void {
+  const current = session
+  if (!current?.floatingId) {
+    return
+  }
+  const panel = current.ctx.workbench.docking.floating.find(item => item.id === current.floatingId)
+  if (!panel) {
+    return
+  }
+  void detachFloatingPanel(current.ctx, panel.id, {
+    x: point.x - current.offsetX,
+    y: point.y - current.offsetY,
+    width: panel.geometry.width,
+    height: panel.geometry.height,
+  })
+  cleanup()
 }
 
 export function cancelDockDrag(): void {
@@ -216,6 +239,10 @@ function move(event: PointerEvent): void {
     }
     document.body.classList.add('df-dock-dragging')
     dockDragState.active = true
+    if (current.floatingId && !current.watchStarted && current.ctx.platform?.supportsPanelDragWatch) {
+      current.watchStarted = true
+      current.ctx.platform.startPanelDragWatch?.()
+    }
   }
   event.preventDefault()
   const panel = current.ctx.workbench.docking.floating.find(panel => panel.id === current.floatingId)
@@ -310,8 +337,11 @@ export function startDockDrag(ctx: Context, groupId: string, event: PointerEvent
     lastScreenY: event.screenY,
     started: false,
     outsideWindow: false,
+    watchStarted: false,
     original: cloneDocking(ctx.workbench.docking),
   }
+  outsideSubscription?.()
+  outsideSubscription = ctx.platform?.onPanelDragOutside?.(onPanelDragOutside)?.dispose
   window.addEventListener('pointermove', move, { passive: false })
   window.addEventListener('pointerup', finish)
   window.addEventListener('pointercancel', cancelDockDrag)

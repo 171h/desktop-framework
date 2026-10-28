@@ -417,6 +417,12 @@ export interface WindowMessage {
   payload: unknown
 }
 
+/** 屏幕坐标（DIP）。 */
+export interface ScreenPoint {
+  x: number
+  y: number
+}
+
 /** 拖出到独立面板窗口时传递的停靠节点。 */
 export interface DetachedPanelPayload {
   title: string
@@ -513,6 +519,12 @@ export interface DesktopBridge {
   sendWindowMessage?: (topic: string, payload: unknown) => void
   /** 订阅其他框架窗口的消息。 */
   onWindowMessage?: (listener: (message: WindowMessage) => void) => () => void
+  /** 开始监听浮动面板拖出主窗口的屏幕位置。 */
+  startPanelDragWatch?: () => void
+  /** 停止监听浮动面板拖拽。 */
+  stopPanelDragWatch?: () => void
+  /** 光标离开主窗口时触发，用于把浮动面板转换为独立窗口。 */
+  onPanelDragOutside?: (listener: (point: ScreenPoint) => void) => () => void
 }
 
 /** 框架运行时模式。 */
