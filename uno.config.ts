@@ -5,6 +5,7 @@ import {
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
+import { defaultIgnoreAttributes } from 'unocss/preset-attributify'
 
 /**
  * 全仓库共用的 UnoCSS 配置。
@@ -15,7 +16,11 @@ import {
 export default defineConfig({
   presets: [
     presetWind3(),
-    presetAttributify(),
+    presetAttributify({
+      // overflow 是 nusys-ui 标签页等组件的公开属性，不能让 attributify
+      // 把它识别成 overflow 工具类，否则组件宿主会出现多余的滚动条。
+      ignoreAttributes: [...defaultIgnoreAttributes, 'overflow'],
+    }),
   ],
   transformers: [
     transformerDirectives(),
