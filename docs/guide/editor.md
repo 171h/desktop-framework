@@ -36,15 +36,22 @@ ctx.effect(() => {
 
 ## VS Code 风格交互
 
-标签栏复用 nusys-ui 的 `vscode-tabs`，补充以下文档语义：
+标签栏行为参考 VS Code 的 `EditorGroupModel` 与 `MultiEditorTabsControl`：
 
-- 拖拽排序、水平溢出滚动、方向键焦点；
+- 拖拽排序，固定标签始终位于左侧且滚动时保持可见；普通标签不能拖入固定区；
+- 水平溢出滚动，方向键移动焦点，活动标签自动滚入可视范围；
+- 预览标签使用斜体，同一时间只保留一个；打开新的预览文档会替换旧的预览标签；
+- 双击预览标签可保留标签页；固定 / 取消固定通过右键菜单或 `togglePin`；
 - 关闭按钮、中键关闭、右键菜单；
-- 关闭其他、关闭右侧、关闭全部；
-- 固定 / 取消固定、脏状态圆点、预览斜体；
+- 关闭其他、关闭右侧、关闭已保存、关闭全部；
+- 脏状态圆点、固定图标、预览斜体；
 - `Ctrl+W` 关闭当前标签页；
-- `Ctrl+Tab` / `Ctrl+Shift+Tab` 切换标签页；
+- `Ctrl+Tab` / `Ctrl+Shift+Tab` 按最近使用（MRU）顺序切换；
+- `Ctrl+PageDown` / `Ctrl+PageUp` 按标签顺序切换；
+- `Ctrl+Shift+T` 重新打开最近关闭的标签页；
 - 切换标签页时通过 `KeepAlive` 保留文档组件状态。
+
+打开文档时可通过 `preview: true` 打开预览标签，通过 `pinned: true` 打开固定标签。`open()` 返回 `IDisposable`，适合在 `ctx.effect` 中注册文档。
 
 主工作区优先渲染当前活动文档；没有文档时回退到 `workbench.registerView({ location: 'main' })` 提供的主视图。标签栏本身不占用编辑内容区域。
 

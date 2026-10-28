@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import type { EditorDocument } from './types'
 import { useCordis } from '@df/vue'
-import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 const ctx = useCordis()
-const tabs = ref<HTMLElement & { selectedIndex: number }>()
+const scroller = ref<HTMLElement>()
+const track = ref<HTMLElement>()
 const contextMenu = ref<HTMLElement & { data: Array<Record<string, unknown>>, show: boolean }>()
 const contextTarget = ref<string>()
 const menuStyle = reactive({ left: '0px', top: '0px' })
+const dropIndex = ref<number>()
+const dropLeft = ref(0)
+const dragId = ref<string>()
+let scrollerObserver: ResizeObserver | undefined
 
-const documents = () => ctx.editor.documents
+const documents = computed(() => ctx.editor.documents)
+const activeId = computed(() => ctx.editor.activeId)
+const pinnedCount = computed(() => documents.value.filter(document => document.pinned).length)
+const compact = computed(() => documents.value.length > 10)
 
 function isActive(document: EditorDocument): boolean {
-  return document.id === ctx.editor.activeId
+  return document.id === activeId.value
 }
 
 function activate(document: EditorDocument): void {
@@ -32,38 +40,70 @@ function closeAll(): void {
 
 function focusActive(): void {
   void nextTick(() => {
-    const activeId = ctx.editor.activeId
-    if (!activeId) {
-      return
-    }
-    const header = Array.from(tabs.value?.children ?? [])
-      .find((element): element is HTMLElement => element instanceof HTMLElement && element.getAttribute('data-doc-id') === activeId)
-    header?.focus()
+    tabElement(activeId.value)?.focus()
   })
 }
 
-function onSelect(event: Event): void {
-  const detail = (event as CustomEvent<{ selectedIndex: number }>).detail
-  const document = ctx.editor.documents[detail.selectedIndex]
-  if (document) {
-    ctx.editor.activate(document.id)
+function tabElement(id?: string): HTMLElement | undefined {
+  if (!id) {
+    return
+  }
+  return [
+    ...(track.value?.querySelectorAll<HTMLElement>('[data-doc-id]') ?? []),
+  ].find(element => element.dataset.docId === id)
+}
+
+function revealActive(): void {
+  const element = tabElement(activeId.value)
+  const container = scroller.value
+  if (!element || !container) {
+    return
+  }
+  if (element.classList.contains('is-pinned')) {
+    return
+  }
+  const pinnedWidth = pinnedTabsWidth()
+  const bounds = container.getBoundingClientRect()
+  const rect = element.getBoundingClientRect()
+  const leftEdge = bounds.left + pinnedWidth
+  if (rect.left < leftEdge) {
+    container.scrollLeft -= leftEdge - rect.left
+  }
+  else if (rect.right > bounds.right) {
+    container.scrollLeft += rect.right - bounds.right
   }
 }
 
-function onLayoutChange(event: Event): void {
-  const detail = (event as CustomEvent<{ header?: HTMLElement }>).detail
-  if (!detail.header) {
+function pinnedTabsWidth(): number {
+  return [
+    ...(track.value?.querySelectorAll<HTMLElement>('.df-editor-tab.is-pinned') ?? []),
+  ].reduce((total, tab) => total + tab.offsetWidth, 0)
+}
+
+function updatePinnedOffsets(): void {
+  const container = scroller.value
+  const tabs = [
+    ...(track.value?.querySelectorAll<HTMLElement>('.df-editor-tab') ?? []),
+  ]
+  let left = 0
+  for (const tab of tabs) {
+    if (!tab.classList.contains('is-pinned')) {
+      tab.style.left = ''
+      continue
+    }
+    tab.style.left = `${left}px`
+    left += tab.offsetWidth
+  }
+  track.value?.classList.toggle('is-pinned-overflow', left > Math.max(0, (container?.clientWidth ?? 0) - 44))
+}
+
+function onWheel(event: WheelEvent): void {
+  const element = scroller.value
+  if (!element || element.scrollWidth <= element.clientWidth) {
     return
   }
-  const headers = Array.from(tabs.value?.children ?? [])
-    .filter((element): element is HTMLElement => element.tagName === 'VSCODE-TAB-HEADER')
-  const ids = headers
-    .map(header => header.getAttribute('data-doc-id'))
-    .filter((id): id is string => Boolean(id))
-  if (ids.length === ctx.editor.documents.length) {
-    ctx.editor.reorder(ids)
-    void nextTick(syncSelectedIndex)
-  }
+  element.scrollLeft += event.deltaY || event.deltaX
+  event.preventDefault()
 }
 
 function onMiddleClick(document: EditorDocument, event: MouseEvent): void {
@@ -73,12 +113,157 @@ function onMiddleClick(document: EditorDocument, event: MouseEvent): void {
   }
 }
 
+function onDoubleClick(document: EditorDocument): void {
+  if (document.preview) {
+    ctx.editor.keepOpen(document.id)
+  }
+}
+
+function onTabKeydown(document: EditorDocument, event: KeyboardEvent): void {
+  const tabs = documents.value
+  const index = tabs.findIndex(item => item.id === document.id)
+  let next: EditorDocument | undefined
+  if (event.key === 'ArrowLeft') {
+    next = tabs[(index - 1 + tabs.length) % tabs.length]
+  }
+  else if (event.key === 'ArrowRight') {
+    next = tabs[(index + 1) % tabs.length]
+  }
+  else if (event.key === 'Home') {
+    next = tabs[0]
+  }
+  else if (event.key === 'End') {
+    next = tabs[tabs.length - 1]
+  }
+  else if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    activate(document)
+    return
+  }
+  if (!next) {
+    return
+  }
+  event.preventDefault()
+  const element = tabElement(next.id)
+  element?.focus()
+  element?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
+function onDragStart(document: EditorDocument, event: DragEvent): void {
+  if (!event.dataTransfer) {
+    return
+  }
+  if (event.composedPath().some(target => target instanceof HTMLElement && target.dataset.noDrag !== undefined)) {
+    event.preventDefault()
+    return
+  }
+  dragId.value = document.id
+  event.dataTransfer.effectAllowed = 'copyMove'
+  event.dataTransfer.setData('application/x-df-editor-tab', document.id)
+  event.dataTransfer.setData('text/plain', document.title)
+}
+
+function onDragOver(event: DragEvent): void {
+  if (!dragId.value || !track.value || !scroller.value) {
+    return
+  }
+  event.preventDefault()
+  event.stopPropagation()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+  const tabs = [
+    ...track.value.querySelectorAll<HTMLElement>('[data-doc-id]'),
+  ]
+  let target = tabs.length
+  for (let index = 0; index < tabs.length; index++) {
+    const rect = tabs[index].getBoundingClientRect()
+    if (event.clientX < rect.left + rect.width / 2) {
+      target = index
+      break
+    }
+  }
+  const source = documents.value.find(document => document.id === dragId.value)
+  if (source?.pinned) {
+    target = Math.min(target, pinnedCount.value)
+  }
+  else {
+    target = Math.max(target, pinnedCount.value)
+  }
+  dropIndex.value = target
+  const scrollerRect = scroller.value.getBoundingClientRect()
+  if (target < tabs.length) {
+    dropLeft.value = tabs[target].getBoundingClientRect().left - scrollerRect.left + scroller.value.scrollLeft
+  }
+  else {
+    const last = tabs[tabs.length - 1]
+    dropLeft.value = last
+      ? last.getBoundingClientRect().right - scrollerRect.left + scroller.value.scrollLeft
+      : 0
+  }
+  const bounds = scroller.value.getBoundingClientRect()
+  if (event.clientX < bounds.left + 24) {
+    scroller.value.scrollLeft -= 16
+  }
+  else if (event.clientX > bounds.right - 24) {
+    scroller.value.scrollLeft += 16
+  }
+}
+
+function onDrop(event: DragEvent): void {
+  if (!dragId.value) {
+    return
+  }
+  event.preventDefault()
+  event.stopPropagation()
+  applyReorder(dragId.value, dropIndex.value ?? documents.value.length)
+  clearDropFeedback()
+}
+
+function onDragLeave(event: DragEvent): void {
+  const related = event.relatedTarget
+  if (!(related instanceof Node) || !scroller.value?.contains(related)) {
+    clearDropFeedback()
+  }
+}
+
+function applyReorder(id: string, target: number): void {
+  const ordered = [...documents.value]
+  const from = ordered.findIndex(document => document.id === id)
+  if (from < 0) {
+    return
+  }
+  const source = ordered[from]
+  const ids = ordered.map(document => document.id)
+  ids.splice(from, 1)
+  const remainingPinned = pinnedCount.value - (source.pinned
+    ? 1
+    : 0)
+  let to = target > from
+    ? target - 1
+    : target
+  to = source.pinned
+    ? Math.max(0, Math.min(to, remainingPinned))
+    : Math.max(remainingPinned, Math.min(to, ids.length))
+  ids.splice(to, 0, id)
+  ctx.editor.reorder(ids)
+}
+
+function clearDropFeedback(): void {
+  dropIndex.value = undefined
+}
+
+function onDragEnd(): void {
+  dragId.value = undefined
+  clearDropFeedback()
+}
+
 function openContext(document: EditorDocument, event: MouseEvent): void {
   contextTarget.value = document.id
-  menuStyle.left = `${Math.min(event.clientX, Math.max(12, window.innerWidth - 230))}px`
-  menuStyle.top = `${Math.min(event.clientY, Math.max(12, window.innerHeight - 230))}px`
+  menuStyle.left = `${Math.min(event.clientX, Math.max(12, window.innerWidth - 260))}px`
+  menuStyle.top = `${Math.min(event.clientY, Math.max(12, window.innerHeight - 330))}px`
   if (contextMenu.value) {
-    contextMenu.value.data = contextData()
+    contextMenu.value.data = contextData(document)
     void nextTick(() => {
       if (contextMenu.value) {
         contextMenu.value.show = true
@@ -87,11 +272,7 @@ function openContext(document: EditorDocument, event: MouseEvent): void {
   }
 }
 
-function contextData(): Array<Record<string, unknown>> {
-  const document = ctx.editor.documents.find(item => item.id === contextTarget.value)
-  if (!document) {
-    return []
-  }
+function contextData(document: EditorDocument): Array<Record<string, unknown>> {
   return [
     {
       label: '关闭',
@@ -100,6 +281,7 @@ function contextData(): Array<Record<string, unknown>> {
     },
     { label: '关闭其他标签页', value: 'others' },
     { label: '关闭右侧标签页', value: 'right' },
+    { label: '关闭已保存的标签页', value: 'saved' },
     { separator: true },
     {
       label: document.pinned ? '取消固定' : '固定标签页',
@@ -128,6 +310,10 @@ function onContextSelect(event: Event): void {
     ctx.editor.closeToRight(id)
     focusActive()
   }
+  else if (action === 'saved') {
+    ctx.editor.closeSaved()
+    focusActive()
+  }
   else if (action === 'pin') {
     ctx.editor.togglePin(id)
   }
@@ -138,85 +324,110 @@ function onContextSelect(event: Event): void {
   contextTarget.value = undefined
 }
 
-function syncSelectedIndex(): void {
-  if (!tabs.value) {
-    return
-  }
-  const index = ctx.editor.activeIndex
-  tabs.value.selectedIndex = index < 0
-    ? 0
-    : index
-}
+watch(
+  () => [activeId.value, documents.value.length] as const,
+  () => void nextTick(revealActive),
+  { immediate: true },
+)
 
-function onWheel(event: WheelEvent): void {
-  const inner = tabs.value?.shadowRoot?.querySelector<HTMLElement>('.tablist')
-  if (!inner || inner.scrollWidth <= inner.clientWidth) {
-    return
-  }
-  inner.scrollLeft += event.deltaY || event.deltaX
-  event.preventDefault()
-}
+const layoutSignature = computed(() => documents.value
+  .map(document => `${document.id}:${document.pinned ? 1 : 0}:${document.dirty ? 1 : 0}:${document.title}`)
+  .join('|'))
 
-watch(() => [ctx.editor.documents.length, ctx.editor.activeIndex], syncSelectedIndex)
+watch(
+  layoutSignature,
+  () => void nextTick(() => {
+    updatePinnedOffsets()
+    revealActive()
+  }),
+  { immediate: true },
+)
+
 onMounted(() => {
-  void nextTick(syncSelectedIndex)
+  if (scroller.value) {
+    scrollerObserver = new ResizeObserver(() => {
+      updatePinnedOffsets()
+      revealActive()
+    })
+    scrollerObserver.observe(scroller.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  scrollerObserver?.disconnect()
 })
 </script>
 
 <template>
-  <div class="df-editor-tabs" role="group" aria-label="打开的文档">
-    <vscode-tabs
-      ref="tabs"
-      class="df-editor-tabs__bar"
-      overflow="scroll"
-      @vsc-tabs-select="onSelect"
-      @vsc-tabs-layout-change="onLayoutChange"
+  <div class="df-editor-tabs" :class="{ 'is-compact': compact }" role="group" aria-label="打开的文档">
+    <div
+      ref="scroller"
+      class="df-editor-tabs__scroller"
+      role="tablist"
+      aria-label="文档标签"
       @wheel="onWheel"
+      @dragover="onDragOver"
+      @dragleave="onDragLeave"
+      @drop="onDrop"
     >
-      <template v-for="document in documents()" :key="document.id">
-        <vscode-tab-header
-          :active="isActive(document)"
-          :icon="document.icon"
-          :title="document.description ?? document.title"
+      <div ref="track" class="df-editor-tabs__track">
+        <div
+          v-for="document in documents"
+          :key="document.id"
           :data-doc-id="document.id"
-          :class="{ 'is-dirty': document.dirty, 'is-preview': document.preview, 'is-pinned': document.pinned }"
+          class="df-editor-tab"
+          :class="{
+            'is-active': isActive(document),
+            'is-dirty': document.dirty,
+            'is-dragging': dragId === document.id,
+            'is-pinned': document.pinned,
+            'is-preview': document.preview,
+          }"
+          role="tab"
+          :aria-selected="isActive(document) ? 'true' : 'false'"
+          :tabindex="isActive(document) ? 0 : -1"
+          :title="document.description ?? document.title"
+          draggable="true"
           @click="activate(document)"
+          @dblclick="onDoubleClick(document)"
           @auxclick="onMiddleClick(document, $event)"
           @contextmenu.prevent="openContext(document, $event)"
+          @dragstart="onDragStart(document, $event)"
+          @dragend="onDragEnd"
+          @keydown="onTabKeydown(document, $event)"
         >
+          <vscode-icon v-if="document.icon" class="df-editor-tab__icon" :name="document.icon" aria-hidden="true" />
           <span class="df-editor-tab__label">{{ document.title }}</span>
+          <span v-if="document.pinned" class="df-editor-tab__pin" aria-hidden="true">
+            <vscode-icon name="pin" />
+          </span>
+          <span v-else-if="document.dirty" class="df-editor-tab__dirty" title="未保存" />
           <vscode-icon
-            v-if="document.pinned"
-            slot="content-after"
-            class="df-editor-tab__pin"
-            name="pin"
-            aria-hidden="true"
-          />
-          <span
-            v-if="document.dirty"
-            slot="content-after"
-            class="df-editor-tab__dirty"
-            title="未保存"
-          />
-          <vscode-icon
-            v-if="document.closable !== false && !document.pinned"
-            slot="content-after"
+            v-if="!document.pinned && document.closable !== false"
             class="df-editor-tab__close"
             :class="{ 'is-dirty': document.dirty }"
             name="close"
             action-icon
             label="关闭标签页"
+            data-no-drag
+            :draggable="false"
+            @pointerdown.stop
             @click.stop
             @vsc-click.stop="close(document, $event)"
           />
-        </vscode-tab-header>
-        <vscode-tab-panel class="df-editor-tabs__panel" />
-      </template>
+        </div>
+        <div
+          v-if="dropIndex !== undefined"
+          class="df-editor-tabs__drop-indicator"
+          :style="{ left: `${dropLeft}px` }"
+          aria-hidden="true"
+        />
+      </div>
+    </div>
 
-      <vscode-toolbar-container slot="addons" class="df-editor-tabs__actions" aria-label="标签页操作">
-        <vscode-toolbar-button icon="close-all" label="关闭所有标签页" @click="closeAll" />
-      </vscode-toolbar-container>
-    </vscode-tabs>
+    <vscode-toolbar-container class="df-editor-tabs__actions" aria-label="标签页操作">
+      <vscode-toolbar-button icon="close-all" label="关闭所有标签页" @click="closeAll" />
+    </vscode-toolbar-container>
 
     <vscode-context-menu
       ref="contextMenu"
@@ -230,6 +441,8 @@ onMounted(() => {
 <style scoped>
 .df-editor-tabs {
   position: relative;
+  display: flex;
+  align-items: stretch;
   flex: 0 0 38px;
   min-height: 38px;
   background: var(--df-titlebar);
@@ -237,94 +450,177 @@ onMounted(() => {
   z-index: 3;
 }
 
-.df-editor-tabs__bar {
-  height: 38px;
-  --vsc-tab-header-height: 20px;
-  --vscode-panelTitle-activeForeground: var(--df-text);
-  --vscode-panelTitle-inactiveForeground: var(--df-muted);
-  --vscode-tab-activeBorderTop: var(--df-accent);
-  --vscode-settings-headerBorder: transparent;
+.df-editor-tabs__scroller {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
 }
 
-.df-editor-tabs__bar :deep(vscode-tab-header) {
+.df-editor-tabs__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.df-editor-tabs__track {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 100%;
+  height: 37px;
+}
+
+.df-editor-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 auto;
+  min-width: 52px;
   max-width: 220px;
-  background: transparent;
+  height: 37px;
+  padding: 0 10px;
   border-right: 1px solid var(--df-border);
   color: var(--df-muted);
   font-size: 11px;
   line-height: 1;
-  transition: background 120ms ease, color 120ms ease;
+  cursor: pointer;
+  user-select: none;
+  transition: background 120ms ease, color 120ms ease, opacity 120ms ease;
 }
 
-.df-editor-tabs__bar :deep(vscode-tab-header:hover) {
+.df-editor-tab:hover {
   background: var(--df-hover);
   color: var(--df-text);
 }
 
-.df-editor-tabs__bar :deep(vscode-tab-header[active]) {
+.df-editor-tab.is-active {
   background: var(--df-surface);
   box-shadow: inset 0 2px 0 var(--df-accent);
   color: var(--df-text);
 }
 
+.df-editor-tab.is-pinned {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--df-titlebar);
+}
+
+.df-editor-tab.is-pinned:hover {
+  background: var(--df-hover);
+}
+
+.df-editor-tab.is-pinned.is-active {
+  background: var(--df-surface);
+}
+
+.df-editor-tabs__track.is-pinned-overflow .df-editor-tab.is-pinned {
+  position: static;
+}
+
+.df-editor-tab:focus-visible {
+  outline: 1px solid var(--df-accent);
+  outline-offset: -2px;
+}
+
+.df-editor-tab.is-dragging {
+  opacity: 0.55;
+}
+
+.df-editor-tab__icon {
+  flex: 0 0 auto;
+  font-size: 13px;
+}
+
+.df-editor-tabs.is-compact .df-editor-tab {
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.df-editor-tabs.is-compact .df-editor-tab__icon {
+  display: none;
+}
+
 .df-editor-tab__label {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.df-editor-tab__close {
+.df-editor-tab.is-preview .df-editor-tab__label {
+  font-style: italic;
+}
+
+.df-editor-tab__pin {
+  display: inline-flex;
+  flex: 0 0 auto;
   margin-left: 4px;
+  color: var(--df-faint);
+  font-size: 10px;
+}
+
+.df-editor-tab__dirty {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--df-accent);
+}
+
+.df-editor-tab__close {
+  display: none;
+  flex: 0 0 auto;
+  margin-left: 2px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 120ms ease;
 }
 
-.df-editor-tabs__bar :deep(vscode-tab-header:hover) .df-editor-tab__close,
-.df-editor-tabs__bar :deep(vscode-tab-header[active]) .df-editor-tab__close {
+.df-editor-tab:hover .df-editor-tab__close,
+.df-editor-tab.is-active .df-editor-tab__close {
+  display: inline-flex;
   opacity: 1;
   pointer-events: auto;
 }
 
-.df-editor-tabs__bar :deep(vscode-tab-header[active]) .df-editor-tab__close.is-dirty {
+.df-editor-tab.is-active .df-editor-tab__close.is-dirty {
+  display: none;
   opacity: 0;
   pointer-events: none;
 }
 
-.df-editor-tabs__bar :deep(vscode-tab-header:hover) .df-editor-tab__close.is-dirty {
+.df-editor-tab:hover .df-editor-tab__close.is-dirty {
+  display: inline-flex;
   opacity: 1;
   pointer-events: auto;
 }
 
-.df-editor-tabs__bar :deep(vscode-tab-header:hover) .df-editor-tab__dirty {
+.df-editor-tab:hover .df-editor-tab__dirty {
   display: none;
 }
 
-.df-editor-tab__dirty {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-left: 6px;
-  border-radius: 50%;
+.df-editor-tabs__drop-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
   background: var(--df-accent);
-}
-
-.df-editor-tab__pin {
-  margin-left: 4px;
-  color: var(--df-faint);
-}
-
-.is-preview .df-editor-tab__label {
-  font-style: italic;
-}
-
-.df-editor-tabs__panel {
-  display: none;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--df-accent) 30%, transparent);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .df-editor-tabs__actions {
-  align-self: center;
-  margin-right: 4px;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding-right: 4px;
 }
 
 .df-editor-tabs__menu {
