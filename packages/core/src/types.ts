@@ -269,6 +269,20 @@ export interface ViewDefinition {
   component?: object
 }
 
+/** 侧边栏 id。 */
+export type SidebarId = 'left' | 'right'
+
+/** 侧边栏停靠侧。 */
+export type DockSide = 'left' | 'right'
+
+/** 浮动侧边栏的位置与尺寸，坐标相对于工作台内容区。 */
+export interface FloatingDockState {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 /** 停靠面板状态。 */
 export interface DockState {
   visible: boolean
@@ -276,6 +290,10 @@ export interface DockState {
   size: number
   /** 当前视图 id。 */
   activeView?: string
+  /** 左右侧栏的停靠侧；两个侧栏可互换左右位置。 */
+  side?: DockSide
+  /** 浮动几何；为空表示已停靠。 */
+  floating?: FloatingDockState | null
 }
 
 /** 工作台布局。 */

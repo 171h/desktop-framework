@@ -44,6 +44,7 @@ export default defineConfig({
             { text: '集成到自己的软件', link: '/guide/integration' },
             { text: '命令系统', link: '/guide/commands' },
             { text: '文档标签页', link: '/guide/editor' },
+            { text: '浮动侧栏与停靠', link: '/guide/docking' },
             { text: '工作区', link: '/guide/workspaces' },
           ],
         },

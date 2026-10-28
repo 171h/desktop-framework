@@ -58,7 +58,7 @@ renderer main.ts
 | `ctx.keybindings` | keybindings | 快捷键解析与分发 |
 | `ctx.storage` | settings | 命名空间化本地存储 |
 | `ctx.ui` | ui | 主题、槽位、命令面板、对话框 |
-| `ctx.workbench` | workbench | 布局、停靠视图、工作区 |
+| `ctx.workbench` | workbench | 布局、停靠/浮动视图、工作区 |
 | `ctx.editor` | editor | 文档标签页、活动文档与关闭/固定/脏状态 |
 | `ctx.ribbon` | ribbon | 从命令生成 Ribbon、页签栏位置 |
 | `ctx.menu` | menu | 应用菜单与快速访问 |

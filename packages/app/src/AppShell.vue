@@ -10,6 +10,8 @@ import { useCordis } from '@desktop-framework/vue'
 import { computed, watch } from 'vue'
 import appIcon from './assets/icon.png'
 import CommandPalette from './components/CommandPalette.vue'
+import DockDropOverlay from './components/DockDropOverlay.vue'
+import FloatingDocks from './components/FloatingDocks.vue'
 import WorkspaceBody from './components/WorkspaceBody.vue'
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue'
 
@@ -85,6 +87,8 @@ watch(
       <WorkspaceBody>
         <DfSlot name="main.overlay" />
       </WorkspaceBody>
+      <FloatingDocks />
+      <DockDropOverlay />
     </div>
 
     <StatusBar v-if="layout.statusbarVisible" />
@@ -226,10 +230,21 @@ watch(
 }
 
 .df-workbench {
+  position: relative;
   flex: 1;
   min-height: 0;
   min-width: 0;
   padding: 0;
   overflow: hidden;
+}
+
+:global(body.df-dock-dragging),
+:global(body.df-dock-dragging *) {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+:global(body.df-dock-resizing) {
+  user-select: none !important;
 }
 </style>

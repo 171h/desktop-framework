@@ -40,7 +40,7 @@ export function apply(ctx: Context): void {
       run: async () => {
         const name = await ctx.ui.showPrompt({
           title: '保存工作区',
-          message: '保存当前停靠面板、活动视图与 Ribbon 状态。',
+          message: '保存当前停靠/浮动侧栏、活动视图与 Ribbon 状态。',
           placeholder: '工作区名称',
           value: `我的工作区 ${ctx.workbench.workspaces.filter(workspace => !workspace.builtin).length + 1}`,
           confirmLabel: '保存',

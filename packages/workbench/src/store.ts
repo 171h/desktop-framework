@@ -4,7 +4,7 @@
  * 布局与工作区预设是 UI 的唯一事实来源；停靠尺寸、可见性与活动视图都直接
  * 序列化，因此用户拖拽后无需额外同步逻辑。
  */
-import type { DockState, ViewLocation, WorkbenchLayout, WorkspacePreset } from '@desktop-framework/core'
+import type { DockSide, DockState, FloatingDockState, SidebarId, ViewLocation, WorkbenchLayout, WorkspacePreset } from '@desktop-framework/core'
 import { clamp } from '@desktop-framework/core'
 import { defineStore } from 'pinia'
 
@@ -22,8 +22,20 @@ export interface WorkbenchState extends PersistedWorkbench {
 
 /** 默认布局。 */
 export const DEFAULT_LAYOUT: WorkbenchLayout = {
-  left: { visible: true, size: 292, activeView: 'explorer' },
-  right: { visible: true, size: 324, activeView: 'properties' },
+  left: {
+    visible: true,
+    size: 292,
+    activeView: 'explorer',
+    side: 'left',
+    floating: null,
+  },
+  right: {
+    visible: true,
+    size: 324,
+    activeView: 'properties',
+    side: 'right',
+    floating: null,
+  },
   bottom: { visible: false, size: 210, activeView: 'output' },
   ribbonCollapsed: false,
   statusbarVisible: true,
@@ -91,11 +103,50 @@ const DOCK_LIMITS: Record<Exclude<ViewLocation, 'main'>, [number, number]> = {
   bottom: [120, 520],
 }
 
+const FLOATING_LIMITS = {
+  width: [240, 1000] as [number, number],
+  height: [180, 1200] as [number, number],
+  x: [0, 10000] as [number, number],
+  y: [0, 10000] as [number, number],
+}
+
+/** 生成侧栏的默认浮动几何；实际使用时会由界面按工作台边界再次限制。 */
+export function defaultFloatingDock(location: SidebarId, size = location === 'left'
+  ? 292
+  : 324): FloatingDockState {
+  return {
+    x: location === 'left'
+      ? 96
+      : 640,
+    y: 96,
+    width: clamp(size, ...FLOATING_LIMITS.width),
+    height: 480,
+  }
+}
+
+function cloneFloating(floating?: FloatingDockState | null): FloatingDockState | null {
+  return floating
+    ? { ...floating }
+    : null
+}
+
 function cloneLayout(layout: WorkbenchLayout): WorkbenchLayout {
   return {
-    left: { ...layout.left },
-    right: { ...layout.right },
-    bottom: { ...layout.bottom },
+    left: {
+      ...layout.left,
+      side: layout.left.side ?? 'left',
+      floating: cloneFloating(layout.left.floating),
+    },
+    right: {
+      ...layout.right,
+      side: layout.right.side ?? 'right',
+      floating: cloneFloating(layout.right.floating),
+    },
+    bottom: {
+      ...layout.bottom,
+      side: undefined,
+      floating: null,
+    },
     ribbonCollapsed: layout.ribbonCollapsed,
     statusbarVisible: layout.statusbarVisible,
   }
@@ -134,6 +185,7 @@ export const useWorkbenchStore = defineStore('desktop-framework:workbench', {
         ...cloneWorkspaces(BUILTIN_WORKSPACES),
         ...cloneWorkspaces(custom).map(workspace => ({
           ...workspace,
+          layout: sanitizeLayout(workspace.layout),
           id: workspace.id || `custom-${Date.now()}`,
           builtin: false,
         })),
@@ -175,6 +227,71 @@ export const useWorkbenchStore = defineStore('desktop-framework:workbench', {
     toggleDock(location: Exclude<ViewLocation, 'main'>): void {
       const dock = this.layout[location]
       this.layout[location] = { ...dock, visible: !dock.visible }
+    },
+
+    /** 将侧栏切换为浮动状态。 */
+    floatDock(location: SidebarId, floating: FloatingDockState): void {
+      const dock = this.layout[location]
+      this.layout[location] = {
+        ...dock,
+        visible: true,
+        floating: sanitizeFloating(floating),
+      }
+    },
+
+    /** 将侧栏停靠到左侧或右侧；目标侧已有侧栏时将其转为浮动。 */
+    dockSidebar(location: SidebarId, side: DockSide): void {
+      const dock = this.layout[location]
+      const otherLocation: SidebarId = location === 'left'
+        ? 'right'
+        : 'left'
+      const other = this.layout[otherLocation]
+      if (!other.floating && (other.side ?? otherLocation) === side) {
+        this.layout[otherLocation] = {
+          ...other,
+          floating: defaultFloatingDock(other.side ?? otherLocation, other.size),
+        }
+      }
+      const [min, max] = DOCK_LIMITS[location]
+      this.layout[location] = {
+        ...dock,
+        visible: true,
+        size: clamp(dock.floating?.width ?? dock.size, min, max),
+        side,
+        floating: null,
+      }
+    },
+
+    /** 更新浮动侧栏位置。 */
+    moveFloatingDock(location: SidebarId, x: number, y: number): void {
+      const dock = this.layout[location]
+      if (!dock.floating) {
+        return
+      }
+      this.layout[location] = {
+        ...dock,
+        floating: {
+          ...dock.floating,
+          x: clamp(Number(x) || 0, ...FLOATING_LIMITS.x),
+          y: clamp(Number(y) || 0, ...FLOATING_LIMITS.y),
+        },
+      }
+    },
+
+    /** 更新浮动侧栏尺寸。 */
+    resizeFloatingDock(location: SidebarId, width: number, height: number): void {
+      const dock = this.layout[location]
+      if (!dock.floating) {
+        return
+      }
+      this.layout[location] = {
+        ...dock,
+        floating: {
+          ...dock.floating,
+          width: clamp(Number(width) || FLOATING_LIMITS.width[0], ...FLOATING_LIMITS.width),
+          height: clamp(Number(height) || FLOATING_LIMITS.height[0], ...FLOATING_LIMITS.height),
+        },
+      }
     },
 
     /** 设置 Ribbon 折叠状态。 */
@@ -223,9 +340,14 @@ export const useWorkbenchStore = defineStore('desktop-framework:workbench', {
 })
 
 function sanitizeLayout(layout: WorkbenchLayout): WorkbenchLayout {
+  const left = sanitizeDock(layout.left, 'left', DEFAULT_LAYOUT.left)
+  const right = sanitizeDock(layout.right, 'right', DEFAULT_LAYOUT.right)
+  if (!left.floating && !right.floating && left.side === right.side) {
+    right.floating = defaultFloatingDock('right', right.size)
+  }
   return {
-    left: sanitizeDock(layout.left, 'left', DEFAULT_LAYOUT.left),
-    right: sanitizeDock(layout.right, 'right', DEFAULT_LAYOUT.right),
+    left,
+    right,
     bottom: sanitizeDock(layout.bottom, 'bottom', DEFAULT_LAYOUT.bottom),
     ribbonCollapsed: Boolean(layout.ribbonCollapsed),
     statusbarVisible: layout.statusbarVisible !== false,
@@ -234,11 +356,31 @@ function sanitizeLayout(layout: WorkbenchLayout): WorkbenchLayout {
 
 function sanitizeDock(value: DockState | undefined, location: Exclude<ViewLocation, 'main'>, fallback: DockState): DockState {
   const [min, max] = DOCK_LIMITS[location]
+  const isSidebar = location === 'left' || location === 'right'
   return {
     visible: value?.visible ?? fallback.visible,
     size: clamp(Number(value?.size) || fallback.size, min, max),
     activeView: typeof value?.activeView === 'string'
       ? value.activeView
       : fallback.activeView,
+    side: isSidebar
+      ? (value?.side === 'right'
+          ? 'right'
+          : value?.side === 'left'
+            ? 'left'
+            : location)
+      : undefined,
+    floating: isSidebar && value?.floating
+      ? sanitizeFloating(value.floating)
+      : null,
+  }
+}
+
+function sanitizeFloating(value: FloatingDockState): FloatingDockState {
+  return {
+    x: clamp(Number(value.x) || 0, ...FLOATING_LIMITS.x),
+    y: clamp(Number(value.y) || 0, ...FLOATING_LIMITS.y),
+    width: clamp(Number(value.width) || FLOATING_LIMITS.width[0], ...FLOATING_LIMITS.width),
+    height: clamp(Number(value.height) || FLOATING_LIMITS.height[0], ...FLOATING_LIMITS.height),
   }
 }

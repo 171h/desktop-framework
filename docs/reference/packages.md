@@ -14,7 +14,7 @@
 | `@desktop-framework/ui` | 基于 nusys-ui 的主题、槽位、Ribbon/分栏包装器与对话框 |
 | `@desktop-framework/notifications` | 通知中心、自动关闭与错误提示组件 |
 | `@desktop-framework/statusbar` | 可扩展状态栏服务与组件 |
-| `@desktop-framework/workbench` | 工作台布局、停靠视图、工作区预设与持久化 |
+| `@desktop-framework/workbench` | 工作台布局、停靠/浮动视图、工作区预设与持久化 |
 | `@desktop-framework/editor` | VS Code 风格文档标签页、文档生命周期与关闭/固定/脏状态 |
 | `@desktop-framework/ribbon` | 从命令元数据自动生成 AutoDesk 风格 Ribbon |
 | `@desktop-framework/menu` | 应用菜单与快速访问工具栏 |

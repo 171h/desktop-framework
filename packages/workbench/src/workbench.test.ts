@@ -70,10 +70,70 @@ describe('workbench', () => {
     await ctx.kernel.dispose()
   })
 
+  it('floats, docks and hides sidebars', async () => {
+    const { ctx } = await setup()
+    ctx.workbench.floatDock('left', {
+      x: 20,
+      y: 30,
+      width: 300,
+      height: 420,
+    })
+    expect(ctx.workbench.layout.left.floating).toEqual({
+      x: 20,
+      y: 30,
+      width: 300,
+      height: 420,
+    })
+    expect(ctx.workbench.dockedSidebar('left')).toBeUndefined()
+    expect(ctx.workbench.dockedSidebar('right')).toBe('right')
+
+    ctx.workbench.moveFloatingDock('left', 25, 35)
+    ctx.workbench.resizeFloatingDock('left', 310, 430)
+    expect(ctx.workbench.layout.left.floating).toEqual({
+      x: 25,
+      y: 35,
+      width: 310,
+      height: 430,
+    })
+
+    ctx.workbench.dockSidebar('left', 'right')
+    expect(ctx.workbench.layout.left.floating).toBeNull()
+    expect(ctx.workbench.layout.left.side).toBe('right')
+    expect(ctx.workbench.layout.left.size).toBe(310)
+    expect(ctx.workbench.layout.right.floating).toBeTruthy()
+    expect(ctx.workbench.dockedSidebar('right')).toBe('left')
+    expect(ctx.workbench.dockedSidebar('left')).toBeUndefined()
+
+    ctx.workbench.floatDock('left', {
+      x: 10,
+      y: 10,
+      width: 280,
+      height: 380,
+    })
+    ctx.workbench.toggleDock('left')
+    expect(ctx.workbench.layout.left.visible).toBe(false)
+    expect(ctx.workbench.layout.left.floating).toBeTruthy()
+    ctx.workbench.toggleDock('left')
+    expect(ctx.workbench.layout.left.visible).toBe(true)
+    expect(ctx.workbench.layout.left.floating).toEqual({
+      x: 10,
+      y: 10,
+      width: 280,
+      height: 380,
+    })
+    await ctx.kernel.dispose()
+  })
+
   it('persists layout and custom workspaces', async () => {
     const { ctx, backend } = await setup()
     ctx.workbench.toggleDock('left')
     ctx.workbench.setDockSize('right', 400)
+    ctx.workbench.floatDock('right', {
+      x: 40,
+      y: 50,
+      width: 320,
+      height: 440,
+    })
     const custom = ctx.workbench.saveWorkspace('我的工作区')
     expect(custom.builtin).toBe(false)
     await new Promise(resolve => setTimeout(resolve, 220))
@@ -83,6 +143,12 @@ describe('workbench', () => {
     const next = await setup(backend)
     expect(next.ctx.workbench.layout.left.visible).toBe(false)
     expect(next.ctx.workbench.layout.right.size).toBe(400)
+    expect(next.ctx.workbench.layout.right.floating).toEqual({
+      x: 40,
+      y: 50,
+      width: 320,
+      height: 440,
+    })
     expect(next.ctx.workbench.workspaces.some(workspace => workspace.name === '我的工作区')).toBe(true)
     await next.ctx.kernel.dispose()
   })
@@ -90,6 +156,7 @@ describe('workbench', () => {
   it('creates layout commands with checked state', async () => {
     const { ctx } = await setup()
     expect(ctx.commands.has('view.toggleLeft')).toBe(true)
+    expect(ctx.commands.has('view.floatLeft')).toBe(true)
     expect(ctx.commands.isChecked('view.toggleLeft')).toBe(true)
     await ctx.commands.execute('view.toggleLeft')
     expect(ctx.commands.isChecked('view.toggleLeft')).toBe(false)

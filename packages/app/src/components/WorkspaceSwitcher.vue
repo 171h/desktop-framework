@@ -44,7 +44,7 @@ async function onSelect(event: Event): Promise<void> {
   if (detail.value === 'save') {
     const name = await ctx.ui.showPrompt({
       title: '保存工作区',
-      message: '当前停靠布局、面板宽度与可见性将保存为新的工作区。',
+      message: '当前停靠/浮动布局、面板尺寸与可见性将保存为新的工作区。',
       placeholder: '例如：审阅 - 双屏',
       value: `我的工作区 ${ctx.workbench.workspaces.filter(workspace => !workspace.builtin).length + 1}`,
       confirmLabel: '保存',

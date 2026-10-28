@@ -1,23 +1,32 @@
 <script setup lang="ts">
+import type { SidebarId } from '@desktop-framework/core'
 import { DfSplitLayout } from '@desktop-framework/ui'
 import { useCordis } from '@desktop-framework/vue'
 import { computed } from 'vue'
 import BottomRegion from './BottomRegion.vue'
 import DockPanel from './DockPanel.vue'
 
+const props = defineProps<{
+  group?: SidebarId
+}>()
+
 const ctx = useCordis()
-const layout = computed(() => ctx.workbench.layout)
+const dock = computed(() => props.group
+  ? ctx.workbench.layout[props.group]
+  : undefined)
 
 function setSize(size: number): void {
-  ctx.workbench.setDockSize('right', size)
+  if (props.group) {
+    ctx.workbench.setDockSize(props.group, size)
+  }
 }
 </script>
 
 <template>
   <DfSplitLayout
-    v-if="layout.right.visible"
+    v-if="props.group && dock"
     split="vertical"
-    :size="layout.right.size"
+    :size="dock.size"
     size-side="end"
     min-start="320px"
     min-end="220px"
@@ -29,7 +38,7 @@ function setSize(size: number): void {
       </BottomRegion>
     </template>
     <template #end>
-      <DockPanel location="right" />
+      <DockPanel :location="props.group" />
     </template>
   </DfSplitLayout>
   <BottomRegion v-else>

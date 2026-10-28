@@ -1,27 +1,79 @@
 <script setup lang="ts">
+import type { DockSide, SidebarId } from '@desktop-framework/core'
+import { clamp } from '@desktop-framework/core'
 import { useCordis } from '@desktop-framework/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { startDockDrag } from '../dock-drag'
 
 const props = defineProps<{
-  location: 'left' | 'right' | 'bottom'
+  location: SidebarId | 'bottom'
 }>()
 
 const ctx = useCordis()
+const root = ref<HTMLElement>()
 const views = computed(() => ctx.workbench.viewsAt(props.location))
 const active = computed(() => ctx.workbench.activeView(props.location))
+const isSidebar = computed(() => props.location !== 'bottom')
+const dock = computed(() => ctx.workbench.layout[props.location])
+const floating = computed(() => Boolean(dock.value.floating))
 
 function activate(id: string): void {
-  ctx.workbench.store.setActiveView(props.location, id)
+  ctx.workbench.openView(id)
 }
 
 function close(): void {
   ctx.workbench.toggleDock(props.location)
 }
+
+function floatPanel(): void {
+  if (props.location === 'bottom') {
+    return
+  }
+  const panel = root.value
+  const workbench = panel?.closest<HTMLElement>('.df-workbench')
+  if (!panel || !workbench) {
+    ctx.workbench.floatDock(props.location)
+    return
+  }
+  const panelRect = panel.getBoundingClientRect()
+  const workRect = workbench.getBoundingClientRect()
+  const width = clamp(panelRect.width, 240, Math.max(240, workRect.width - 24))
+  const height = clamp(panelRect.height, 320, Math.max(320, Math.min(workRect.height - 32, 560)))
+  ctx.workbench.floatDock(props.location, {
+    x: clamp(panelRect.left - workRect.left + 18, 16, Math.max(16, workRect.width - width - 16)),
+    y: clamp(panelRect.top - workRect.top + 48, 16, Math.max(16, workRect.height - height - 16)),
+    width,
+    height,
+  })
+}
+
+function dockTo(side: DockSide): void {
+  if (props.location !== 'bottom') {
+    ctx.workbench.dockSidebar(props.location, side)
+  }
+}
+
+function onHeaderPointerDown(event: PointerEvent): void {
+  if (props.location === 'bottom') {
+    return
+  }
+  startDockDrag(ctx, props.location, event, root.value)
+}
 </script>
 
 <template>
-  <section class="df-dock" :data-location="location">
-    <header class="df-dock__header">
+  <section ref="root" class="df-dock" :data-location="location">
+    <header
+      class="df-dock__header"
+      :class="{ 'is-draggable': isSidebar }"
+      @pointerdown="onHeaderPointerDown"
+    >
+      <vscode-icon
+        v-if="isSidebar"
+        class="df-dock__grip"
+        name="gripper"
+        title="拖动以浮动或停靠"
+      />
       <div class="df-dock__tabs">
         <vscode-toolbar-button
           v-for="view in views"
@@ -35,7 +87,29 @@ function close(): void {
           {{ view.title }}
         </vscode-toolbar-button>
       </div>
-      <vscode-toolbar-button icon="close" label="隐藏面板" @click="close" />
+      <div class="df-dock__actions">
+        <template v-if="isSidebar">
+          <template v-if="floating">
+            <vscode-toolbar-button
+              icon="layout-sidebar-left-dock"
+              label="停靠到左侧"
+              @click="dockTo('left')"
+            />
+            <vscode-toolbar-button
+              icon="layout-sidebar-right-dock"
+              label="停靠到右侧"
+              @click="dockTo('right')"
+            />
+          </template>
+          <vscode-toolbar-button
+            v-else
+            icon="multiple-windows"
+            label="浮动侧栏"
+            @click="floatPanel"
+          />
+        </template>
+        <vscode-toolbar-button icon="close" label="隐藏面板" @click="close" />
+      </div>
     </header>
     <div class="df-dock__body">
       <component :is="active?.component" v-if="active?.component" />
@@ -51,6 +125,7 @@ function close(): void {
 .df-dock {
   display: flex;
   flex-direction: column;
+  width: 100%;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -67,6 +142,18 @@ function close(): void {
   background: var(--df-titlebar);
   flex: 0 0 auto;
   -webkit-app-region: no-drag;
+  user-select: none;
+}
+
+.df-dock__header.is-draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.df-dock__grip {
+  flex: 0 0 auto;
+  margin: 0 2px 0 0;
+  color: var(--df-faint);
 }
 
 .df-dock__tabs {
@@ -95,6 +182,13 @@ function close(): void {
   color: var(--df-text);
   background: var(--df-surface);
   box-shadow: inset 0 -2px 0 var(--df-accent);
+}
+
+.df-dock__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
 }
 
 .df-dock__body {

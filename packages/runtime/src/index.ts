@@ -15,10 +15,13 @@ export {
 } from '@desktop-framework/core'
 export type {
   CommandDefinition,
+  DockSide,
+  FloatingDockState,
   FrameworkPluginManifest,
   PluginEntry,
   RibbonPlacement,
   RibbonTabPlacement,
+  SidebarId,
   ViewDefinition,
   WorkbenchLayout,
   WorkspacePreset,

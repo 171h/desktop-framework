@@ -6,33 +6,39 @@ import DockPanel from './DockPanel.vue'
 import RightRegion from './RightRegion.vue'
 
 const ctx = useCordis()
-const layout = computed(() => ctx.workbench.layout)
+const leftGroup = computed(() => ctx.workbench.dockedSidebar('left'))
+const rightGroup = computed(() => ctx.workbench.dockedSidebar('right'))
+const leftSize = computed(() => leftGroup.value
+  ? ctx.workbench.layout[leftGroup.value].size
+  : 0)
 
 function setSize(size: number): void {
-  ctx.workbench.setDockSize('left', size)
+  if (leftGroup.value) {
+    ctx.workbench.setDockSize(leftGroup.value, size)
+  }
 }
 </script>
 
 <template>
   <DfSplitLayout
-    v-if="layout.left.visible"
+    v-if="leftGroup"
     split="vertical"
-    :size="layout.left.size"
+    :size="leftSize"
     size-side="start"
     min-start="180px"
     min-end="420px"
     @update:size="setSize"
   >
     <template #start>
-      <DockPanel location="left" />
+      <DockPanel :location="leftGroup" />
     </template>
     <template #end>
-      <RightRegion>
+      <RightRegion :group="rightGroup">
         <slot />
       </RightRegion>
     </template>
   </DfSplitLayout>
-  <RightRegion v-else>
+  <RightRegion v-else :group="rightGroup">
     <slot />
   </RightRegion>
 </template>

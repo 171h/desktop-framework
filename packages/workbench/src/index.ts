@@ -9,8 +9,11 @@
  */
 import type {
   CommandDefinition,
+  DockSide,
   DockState,
+  FloatingDockState,
   IDisposable,
+  SidebarId,
   ViewDefinition,
   ViewLocation,
   WorkspacePreset,
@@ -20,7 +23,7 @@ import type { PersistedWorkbench } from './store'
 import { debounce, errorMessage } from '@desktop-framework/core'
 import { Service } from 'cordis'
 import { markRaw, ref, watch } from 'vue'
-import { BUILTIN_WORKSPACES, useWorkbenchStore } from './store'
+import { BUILTIN_WORKSPACES, defaultFloatingDock, useWorkbenchStore } from './store'
 
 export * from './store'
 
@@ -115,6 +118,43 @@ export class WorkbenchService extends Service {
     }
     const id = this.store.layout[location].activeView
     return this.viewsAt(location).find(view => view.id === id) ?? this.viewsAt(location)[0]
+  }
+
+  /** 指定侧边当前停靠的侧栏。 */
+  dockedSidebar(side: DockSide): SidebarId | undefined {
+    for (const location of ['left', 'right'] as const) {
+      const dock = this.store.layout[location]
+      if (dock.visible && !dock.floating && (dock.side ?? location) === side) {
+        return location
+      }
+    }
+    return undefined
+  }
+
+  /** 侧栏当前是否浮动。 */
+  isFloating(location: SidebarId): boolean {
+    return Boolean(this.store.layout[location].floating)
+  }
+
+  /** 将侧栏切换为浮动；未提供几何时使用默认位置。 */
+  floatDock(location: SidebarId, geometry?: FloatingDockState): void {
+    const dock = this.store.layout[location]
+    this.store.floatDock(location, geometry ?? defaultFloatingDock(dock.side ?? location, dock.size))
+  }
+
+  /** 将侧栏停靠到指定一侧；目标侧被占用时将原侧栏转为浮动。 */
+  dockSidebar(location: SidebarId, side: DockSide): void {
+    this.store.dockSidebar(location, side)
+  }
+
+  /** 更新浮动侧栏位置。 */
+  moveFloatingDock(location: SidebarId, x: number, y: number): void {
+    this.store.moveFloatingDock(location, x, y)
+  }
+
+  /** 更新浮动侧栏尺寸。 */
+  resizeFloatingDock(location: SidebarId, width: number, height: number): void {
+    this.store.resizeFloatingDock(location, width, height)
   }
 
   /** 注册视图。 */
@@ -289,6 +329,32 @@ export class WorkbenchService extends Service {
           order: 2,
         },
         run: () => this.toggleDock('bottom'),
+      },
+      {
+        id: 'view.floatLeft',
+        title: '浮动左侧栏',
+        description: '将左侧栏从停靠位置分离为浮动面板。',
+        category: '视图',
+        icon: 'multiple-windows',
+        enabled: () => this.store.layout.left.visible && !this.store.layout.left.floating,
+        menu: {
+          path: ['视图'],
+          order: 4,
+        },
+        run: () => this.floatDock('left'),
+      },
+      {
+        id: 'view.floatRight',
+        title: '浮动右侧栏',
+        description: '将右侧栏从停靠位置分离为浮动面板。',
+        category: '视图',
+        icon: 'multiple-windows',
+        enabled: () => this.store.layout.right.visible && !this.store.layout.right.floating,
+        menu: {
+          path: ['视图'],
+          order: 5,
+        },
+        run: () => this.floatDock('right'),
       },
       {
         id: 'view.toggleRibbon',
