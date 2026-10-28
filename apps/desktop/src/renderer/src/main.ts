@@ -10,27 +10,27 @@ async function boot(): Promise<void> {
     console.warn('[renderer] 无法读取框架运行时信息，使用本地版本', error)
   }
   if (runtime?.mode === 'remote' && runtime.entryUrl) {
-    try {
-      if (runtime.styleUrl) {
+    if (runtime.styleUrl) {
+      await new Promise<void>((resolve, reject) => {
         const link = document.createElement('link')
         link.rel = 'stylesheet'
-        link.href = runtime.styleUrl
+        link.href = runtime.styleUrl!
+        link.onload = () => resolve()
+        link.onerror = () => reject(new Error('远程运行时样式加载失败'))
         document.head.append(link)
-      }
-      const module = await import(/* @vite-ignore */ runtime.entryUrl) as {
-        createFrameworkApp?: (options: Record<string, unknown>) => Promise<unknown>
-      }
-      if (module.createFrameworkApp) {
-        await module.createFrameworkApp({
-          el: '#app',
-          title: 'Desktop Framework — Runtime',
-        })
-        return
-      }
+      })
     }
-    catch (error) {
-      console.warn('[renderer] 远程运行时加载失败，回退本地版本', error)
+    const module = await import(/* @vite-ignore */ runtime.entryUrl) as {
+      createFrameworkApp?: (options: Record<string, unknown>) => Promise<unknown>
     }
+    if (typeof module.createFrameworkApp !== 'function') {
+      throw new TypeError('远程运行时未导出 createFrameworkApp')
+    }
+    await module.createFrameworkApp({
+      el: '#app',
+      title: 'Desktop Framework — Runtime',
+    })
+    return
   }
 
   // 本地框架延迟到确定不走远程运行时后再加载，避免重复注册 nusys-ui Custom Elements。
@@ -45,11 +45,10 @@ boot().catch((error) => {
   console.error(error)
   const root = document.querySelector('#app')
   if (root) {
-    root.innerHTML = `
-      <div style="padding:40px;font-family:system-ui;color:#e7e9ec;background:#141619;min-height:100vh">
-        <h1 style="font-size:18px">桌面框架启动失败</h1>
-        <pre style="color:#f06d6d;white-space:pre-wrap">${String(error?.stack ?? error)}</pre>
-      </div>
-    `
+    const heading = document.createElement('h1')
+    heading.textContent = '桌面框架启动失败'
+    const detail = document.createElement('pre')
+    detail.textContent = String(error?.stack ?? error)
+    root.replaceChildren(heading, detail)
   }
 })

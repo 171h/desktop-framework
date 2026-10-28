@@ -4,7 +4,6 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { shortCommit } from '@df/bootstrap'
 import { RuntimeResolver } from '@df/bootstrap/node'
-import { errorMessage } from '@df/core'
 import { DisposableStore, toDisposable } from '@df/vscode'
 import { app, net, protocol } from 'electron'
 import { serveFile } from '../static'
@@ -34,18 +33,13 @@ export async function apply(ctx: Context): Promise<void> {
       logger: (level, message) => ctx.logger[level](message),
       fetch: ((input, init) => net.fetch(input as string, init)) as typeof fetch,
     })
-    try {
-      const runtime = await resolver.resolveFile(configPath)
-      host.setRuntime(runtime)
-      if (runtime.mode === 'workspace') {
-        ctx.logger.info(`[electron] 运行时使用工作区版本${runtime.fallbackReason
-          ? `（${runtime.fallbackReason}）`
-          : ''}`)
-      }
-    }
-    catch (error) {
-      ctx.logger.error(`[electron] 运行时解析失败：${errorMessage(error)}`)
-      host.setRuntime(undefined)
+    // auto 的回退策略由解析器处理；remote 失败必须交给宿主终止启动。
+    const runtime = await resolver.resolveFile(configPath)
+    host.setRuntime(runtime)
+    if (runtime.mode === 'workspace') {
+      ctx.logger.info(`[electron] 运行时使用工作区版本${runtime.fallbackReason
+        ? `（${runtime.fallbackReason}）`
+        : ''}`)
     }
   }
 
@@ -58,10 +52,9 @@ export async function apply(ctx: Context): Promise<void> {
     if (url.hostname !== shortCommit(runtime.commit)) {
       return new Response('Forbidden', { status: 403 })
     }
-    const pathname = decodeURIComponent(url.pathname).replace(/^\/+/, '')
     return serveFile({
       root: runtime.directory,
-      pathname: `/${pathname}`,
+      pathname: url.pathname,
       index: 'index.html',
       cacheControl: 'public, max-age=31536000, immutable',
     })

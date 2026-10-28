@@ -5,7 +5,7 @@
  * WASM，并会阻止路径穿越。`df-runtime://` 只暴露已校验缓存目录中的运行时
  * 制品，渲染进程不能借它读取任意文件。
  */
-import { readFile, stat } from 'node:fs/promises'
+import { readFile, realpath, stat } from 'node:fs/promises'
 import { extname, resolve, sep } from 'node:path'
 
 const MIME_TYPES: Record<string, string> = {
@@ -54,7 +54,13 @@ export interface ServeOptions {
 export async function serveFile(options: ServeOptions): Promise<Response> {
   const root = resolve(options.root)
   const index = options.index ?? 'index.html'
-  let pathname = decodeURIComponent(options.pathname || '/')
+  let pathname: string
+  try {
+    pathname = decodeURIComponent(options.pathname || '/')
+  }
+  catch {
+    return new Response('Bad Request', { status: 400 })
+  }
   if (pathname.endsWith('/')) {
     pathname += index
   }
@@ -81,6 +87,9 @@ export async function serveFile(options: ServeOptions): Promise<Response> {
     return forbidden()
   }
   try {
+    if (!isInside(await realpath(root), await realpath(filePath))) {
+      return forbidden()
+    }
     const data = await readFile(filePath)
     const extension = extname(filePath).toLowerCase()
     const headers: Record<string, string> = {

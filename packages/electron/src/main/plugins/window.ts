@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { debounce, errorMessage } from '@df/core'
 import { DisposableStore, toDisposable } from '@df/vscode'
 import { app, BrowserWindow, nativeTheme, shell } from 'electron'
+import { isAllowedNavigation } from '../navigation'
 import { loadWindowState, saveWindowState } from '../window-state'
 
 export const name = 'electron:window'
@@ -34,7 +35,7 @@ export async function apply(ctx: Context): Promise<void> {
       nodeIntegrationInWorker: false,
       webviewTag: false,
       spellcheck: false,
-      backgroundThrottling: false,
+      backgroundThrottling: true,
       v8CacheOptions: 'code',
       ...windowOptions.webPreferences,
       additionalArguments: [
@@ -207,21 +208,4 @@ export async function apply(ctx: Context): Promise<void> {
   }
   app.on('activate', onActivate)
   disposables.add(toDisposable(() => app.off('activate', onActivate)))
-}
-
-function isAllowedNavigation(url: string, devUrl?: string): boolean {
-  if (url.startsWith('df-app://bundle/') || url.startsWith('df-runtime://')) {
-    return true
-  }
-  if (devUrl) {
-    try {
-      const dev = new URL(devUrl)
-      const target = new URL(url)
-      return dev.origin === target.origin
-    }
-    catch {
-      return false
-    }
-  }
-  return false
 }

@@ -7,6 +7,7 @@ import { errorMessage } from '@df/core'
 import { DisposableStore, toDisposable } from '@df/vscode'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { CHANNELS } from '../../shared'
+import { isAllowedNavigation } from '../navigation'
 
 export const name = 'electron:ipc'
 export const inject = ['electronHost']
@@ -20,12 +21,9 @@ export async function apply(ctx: Context): Promise<void> {
   ctx.effect(() => () => disposables.dispose(), 'electron:ipc')
 
   const trusted = (event: Electron.IpcMainInvokeEvent): boolean => {
-    const url = event.senderFrame?.url ?? ''
-    const devUrl = host.options.renderer.devUrl
-    if (devUrl && url.startsWith(devUrl)) {
-      return true
-    }
-    return url.startsWith('df-app://bundle/')
+    return event.sender === host.mainWindow?.webContents
+      && event.senderFrame === event.sender.mainFrame
+      && isAllowedNavigation(event.senderFrame?.url ?? '', host.options.renderer.devUrl)
   }
 
   const handle = (channel: string, listener: (event: Electron.IpcMainInvokeEvent, ...args: never[]) => unknown): void => {

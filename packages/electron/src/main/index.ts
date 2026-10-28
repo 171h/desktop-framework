@@ -31,7 +31,7 @@ export async function bootstrapElectron(options: ElectronHostOptions): Promise<E
   const ctx = await createFrameworkContext({
     environment: 'electron-main',
     version: options.version,
-    strict: false,
+    strict: true,
   })
   try {
     ctx.on('kernel/plugin-loaded', (info) => {
@@ -49,13 +49,18 @@ export async function bootstrapElectron(options: ElectronHostOptions): Promise<E
         description: '主进程共享状态',
       }),
       pluginEntry(lifecyclePlugin, undefined, { id: 'electron:lifecycle', name: '生命周期' }),
+    ])
+    // 先完成运行时、协议、IPC 和权限策略，再创建能执行页面代码的窗口。
+    await ctx.kernel.load([
       pluginEntry(runtimePlugin, undefined, { id: 'electron:runtime', name: '运行时解析' }),
       pluginEntry(protocolPlugin, undefined, { id: 'electron:protocol', name: '安全协议' }),
       // IPC 必须先于窗口注册，确保首屏的 getRuntime 请求已有 handler。
       pluginEntry(ipcPlugin, undefined, { id: 'electron:ipc', name: 'IPC 桥' }),
+      pluginEntry(sessionPlugin, undefined, { id: 'electron:session', name: '会话安全' }),
+    ])
+    await ctx.kernel.load([
       pluginEntry(windowPlugin, undefined, { id: 'electron:window', name: '主窗口' }),
       pluginEntry(menuPlugin, undefined, { id: 'electron:menu', name: '原生菜单' }),
-      pluginEntry(sessionPlugin, undefined, { id: 'electron:session', name: '会话安全' }),
       ...(options.plugins ?? []),
     ])
     const host = ctx.electronHost
@@ -91,8 +96,6 @@ function configureApplication(options: ElectronHostOptions): void {
   app.setName(productName)
   if (process.platform === 'win32') {
     app.setAppUserModelId(options.appId ?? 'dev.desktop-framework.app')
-    // VS Code 同样在 Windows 上关闭原生窗口遮挡计算，避免后台窗口被错误节流。
-    app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion')
   }
   app.commandLine.appendSwitch('force-color-profile', 'srgb')
   if (process.env.DF_DISABLE_GPU === '1') {
