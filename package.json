@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @df/app-web dev",
-    "dev:desktop": "pnpm build:wasm && node scripts/ensure-electron.mjs && pnpm --filter @df/app-desktop dev",
+    "dev:desktop": "node scripts/ensure-wasm.mjs && node scripts/ensure-electron.mjs && pnpm --filter @df/app-desktop dev",
     "build": "pnpm build:wasm && pnpm build:web && pnpm build:desktop",
     "build:web": "pnpm --filter @df/app-web build",
     "build:desktop": "pnpm --filter @df/app-desktop build",

@@ -113,7 +113,7 @@ export function createDefaultPreset(options: PresetOptions = {}): PluginEntry[] 
       version: '0.1.0',
       description: '浏览器与 Electron 宿主适配',
     }),
-    pluginEntry(wasm, { preload: true }, {
+    pluginEntry(wasm, { preload: false }, {
       id: 'framework:wasm',
       name: 'WASM 热路径',
       version: '0.1.0',

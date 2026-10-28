@@ -6,9 +6,72 @@
     <meta name="theme-color" content="#141619" />
     <link rel="icon" type="image/png" href="./icon.png" />
     <title>Desktop Framework</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body, #app { width: 100%; height: 100%; margin: 0; }
+      body {
+        overflow: hidden;
+        background: #141619;
+        color: #e7e9ec;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .df-boot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        height: 100%;
+        background:
+          radial-gradient(circle at 50% 38%, rgb(200 145 63 / 12%), transparent 34%),
+          #141619;
+        user-select: none;
+      }
+      .df-boot__logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgb(0 0 0 / 38%);
+      }
+      .df-boot__brand {
+        font-size: 18px;
+        font-weight: 650;
+        letter-spacing: 0.02em;
+      }
+      .df-boot__status {
+        color: #9aa3ad;
+        font-size: 11px;
+      }
+      .df-boot__bar {
+        width: 180px;
+        height: 2px;
+        overflow: hidden;
+        border-radius: 2px;
+        background: rgb(255 255 255 / 10%);
+      }
+      .df-boot__bar span {
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: 2px;
+        background: #c8913f;
+        animation: df-boot-progress 1.1s ease-in-out infinite;
+      }
+      @keyframes df-boot-progress {
+        from { transform: translateX(-110%); }
+        to { transform: translateX(360%); }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="df-boot" role="status" aria-live="polite">
+        <img class="df-boot__logo" src="./icon.png" alt="">
+        <div class="df-boot__brand">Desktop Framework</div>
+        <div class="df-boot__status">正在启动工作台…</div>
+        <div class="df-boot__bar"><span></span></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

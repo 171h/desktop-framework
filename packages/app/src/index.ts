@@ -13,9 +13,9 @@ import { createDefaultPreset, defaultPreset } from './preset'
 import { createShellPlugin } from './shell'
 import '@df/ui/theme.css'
 
-export { default as AppShell } from './AppShell.vue'
 export { AccountService } from './account'
 export type { AccountUser, LoginInput } from './account'
+export { default as AppShell } from './AppShell.vue'
 export * from './commands'
 export { default as DetachedEditorShell } from './DetachedEditorShell.vue'
 export { default as DetachedPanelShell } from './DetachedPanelShell.vue'
@@ -36,14 +36,21 @@ export interface CreateFrameworkAppOptions extends PresetOptions {
   shell?: Pick<ShellConfig, 'component' | 'inject'>
   /** 自定义外壳的根组件属性。 */
   shellProps?: Record<string, unknown>
+  /** 外壳挂载后再加载的插件；用于降低首屏阻塞。 */
+  deferred?: DeferredPluginSource
 }
 
 export interface FrameworkApp {
   ctx: Awaited<ReturnType<typeof createFrameworkContext>>
   shell: import('./shell').ShellService
   startup: StartupTimer
+  /** 外壳挂载后再加载的插件完成时解析。 */
+  ready: Promise<void>
   dispose: () => Promise<void>
 }
+
+/** 延迟插件可以在外壳挂载后以异步方式加载。 */
+export type DeferredPluginSource = PluginEntry[] | (() => Promise<PluginEntry[]>)
 
 /** 创建并启动框架应用。 */
 export async function createFrameworkApp(options: CreateFrameworkAppOptions): Promise<FrameworkApp> {
@@ -81,7 +88,7 @@ export async function createFrameworkApp(options: CreateFrameworkAppOptions): Pr
 
   try {
     await ctx.kernel.load(entries)
-    startup.mark('plugins-ready')
+    startup.mark('core-ready')
 
     if (!ctx.shell?.mounted) {
       throw new Error('应用外壳插件加载失败；请检查内核插件诊断信息')
@@ -92,12 +99,32 @@ export async function createFrameworkApp(options: CreateFrameworkAppOptions): Pr
     throw error
   }
 
+  let deferredReady: Promise<void> = Promise.resolve()
+  if (options.deferred) {
+    deferredReady = (async () => {
+      const deferred = typeof options.deferred === 'function'
+        ? await options.deferred()
+        : options.deferred
+      if (!deferred?.length) {
+        return
+      }
+      await ctx.kernel.load(deferred)
+      startup.mark('deferred-ready')
+    })().catch((error) => {
+      startup.mark('deferred-failed')
+      ctx.logger.warn(`[startup] 延迟插件加载失败：${String(error)}`)
+    })
+    void deferredReady
+  }
+
   return {
     ctx,
     shell: ctx.shell,
     startup,
+    ready: deferredReady,
     dispose: async () => {
       startup.mark('dispose')
+      await deferredReady
       await ctx.kernel.dispose()
     },
   }

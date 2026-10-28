@@ -53,6 +53,45 @@ describe('application composition', () => {
     expect(target.textContent).toBe('')
   })
 
+  it('mounts the shell before loading deferred plugins', async () => {
+    const target = document.createElement('div')
+    document.body.append(target)
+    let applied = false
+    let release: () => void = () => {}
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const app = await createFrameworkApp({
+      el: target,
+      preset: [
+        pluginEntry(pinia),
+      ],
+      shell: { component, inject: [] },
+      deferred: async () => {
+        await gate
+        return [
+          pluginEntry({
+            name: 'deferred-fixture',
+            apply() {
+              applied = true
+            },
+          }),
+        ]
+      },
+    })
+    try {
+      expect(app.shell.mounted).toBe(true)
+      expect(applied).toBe(false)
+      release()
+      await app.ready
+      expect(applied).toBe(true)
+      expect(app.ctx.kernel.plugins.some(info => info.id === 'deferred-fixture')).toBe(true)
+    }
+    finally {
+      await app.dispose()
+    }
+  })
+
   it('disposes already loaded plugins when shell mounting fails', async () => {
     let disposed = false
     await expect(createFrameworkApp({
